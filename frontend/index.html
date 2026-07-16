@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Engine - Solver & Visualizer</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Sudoku Engine</h1>
+            <p class="subtitle">Generation, Solving & Algorithm Visualization Platform</p>
+        </header>
+
+        <main class="main">
+            <!-- Sudoku Grid -->
+            <section class="sudoku-section">
+                <div class="sudoku-container">
+                    <div id="sudokuGrid" class="sudoku-grid">
+                        <!-- Grid will be populated by JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Controls -->
+            <section class="controls-section">
+                <div class="button-group">
+                    <button id="newPuzzleBtn" class="btn btn-primary">New Puzzle</button>
+                    <button id="solvePuzzleBtn" class="btn btn-success">Solve</button>
+                    <button id="resetPuzzleBtn" class="btn btn-warning">Reset</button>
+                    <button id="clearPuzzleBtn" class="btn btn-danger">Clear</button>
+                </div>
+
+                <!-- Difficulty Selector -->
+                <div class="difficulty-selector">
+                    <label for="difficultySelect">Difficulty:</label>
+                    <select id="difficultySelect">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                        <option value="expert">Expert</option>
+                    </select>
+                </div>
+            </section>
+
+            <!-- Info Panel -->
+            <section class="info-section">
+                <div class="info-panel">
+                    <h3>Info</h3>
+                    <p id="solvingTime" class="info-item">Solving Time: -</p>
+                    <p id="puzzleStatus" class="info-item">Status: <span>Ready</span></p>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 Sudoku Engine. Built with Java, Spring Boot & Vanilla JavaScript.</p>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
