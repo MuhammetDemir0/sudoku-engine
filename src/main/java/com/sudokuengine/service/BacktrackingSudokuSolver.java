@@ -21,6 +21,24 @@ public class BacktrackingSudokuSolver implements SudokuSolver {
         this.validator = validator;
     }
 
+    /**
+     * Counts solutions up to a caller-provided limit.
+     */
+    public int countSolutions(SudokuBoard board, int limit) {
+        if (board == null) {
+            throw new InvalidBoardException("Input board cannot be null.");
+        }
+        if (limit < 1) {
+            throw new IllegalArgumentException("Limit must be greater than zero.");
+        }
+
+        SudokuBoard workingCopy = board.copy();
+        if (!validator.isValid(workingCopy)) {
+            throw new InvalidBoardException("Initial board is invalid and cannot be counted.");
+        }
+        return countSolutionsRecursively(workingCopy, limit);
+    }
+
     @Override
     public SolveResult solveInternal(SudokuBoard workingBoard) {
         if (!validator.isValid(workingBoard)) {
@@ -69,6 +87,33 @@ public class BacktrackingSudokuSolver implements SudokuSolver {
             metrics.backtracks++;
         }
         return false;
+    }
+
+    private int countSolutionsRecursively(SudokuBoard board, int limit) {
+        if (limit <= 0) {
+            return 0;
+        }
+
+        Cell emptyCell = findFirstEmptyCell(board);
+        if (emptyCell == null) {
+            return 1;
+        }
+
+        int found = 0;
+        for (int candidate = 1; candidate <= SudokuBoard.MAX_VALUE; candidate++) {
+            if (!isValidMove(board, emptyCell.row(), emptyCell.col(), candidate)) {
+                continue;
+            }
+
+            board.write(emptyCell.row(), emptyCell.col(), candidate);
+            found += countSolutionsRecursively(board, limit - found);
+            board.write(emptyCell.row(), emptyCell.col(), SudokuBoard.EMPTY);
+
+            if (found >= limit) {
+                return found;
+            }
+        }
+        return found;
     }
 
     private static Cell findFirstEmptyCell(SudokuBoard board) {
