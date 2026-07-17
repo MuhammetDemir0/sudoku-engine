@@ -1,5 +1,9 @@
 package com.sudokuengine.model;
 
+import com.sudokuengine.exception.InvalidBoardException;
+import com.sudokuengine.exception.InvalidCellValueException;
+import com.sudokuengine.exception.InvalidCoordinateException;
+
 import java.util.Arrays;
 
 /**
@@ -66,14 +70,14 @@ public final class SudokuBoard {
 
     private static void validateBoardShape(int[][] board) {
         if (board == null) {
-            throw new IllegalArgumentException("Board matrix cannot be null.");
+            throw new InvalidBoardException("Board matrix cannot be null.");
         }
         if (board.length != SIZE) {
-            throw new IllegalArgumentException("Board must have exactly 9 rows.");
+            throw new InvalidBoardException("Board must have exactly 9 rows.");
         }
         for (int i = 0; i < SIZE; i++) {
             if (board[i] == null || board[i].length != SIZE) {
-                throw new IllegalArgumentException("Board must be a 9x9 matrix.");
+                throw new InvalidBoardException("Board must be a 9x9 matrix.");
             }
         }
     }
@@ -88,13 +92,13 @@ public final class SudokuBoard {
 
     private static void validateCoordinate(int row, int col) {
         if (row < 0 || row >= SIZE || col < 0 || col >= SIZE) {
-            throw new IllegalArgumentException("Coordinates must be between 0 and 8.");
+            throw new InvalidCoordinateException("Coordinates must be between 0 and 8.");
         }
     }
 
     private static void validateValue(int value) {
         if (value < MIN_VALUE || value > MAX_VALUE) {
-            throw new IllegalArgumentException("Cell value must be between 0 and 9.");
+            throw new InvalidCellValueException("Cell value must be between 0 and 9.");
         }
     }
 
