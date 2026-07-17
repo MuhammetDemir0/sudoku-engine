@@ -1,5 +1,8 @@
 package com.sudokuengine.model;
 
+import com.sudokuengine.exception.InvalidBoardException;
+import com.sudokuengine.exception.InvalidCellValueException;
+import com.sudokuengine.exception.InvalidCoordinateException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -15,41 +18,41 @@ class SudokuBoardTest {
         assertDoesNotThrow(() -> new SudokuBoard(valid));
 
         int[][] invalidRows = new int[8][9];
-        assertThrows(IllegalArgumentException.class, () -> new SudokuBoard(invalidRows));
+        assertThrows(InvalidBoardException.class, () -> new SudokuBoard(invalidRows));
 
         int[][] invalidCols = new int[9][8];
-        assertThrows(IllegalArgumentException.class, () -> new SudokuBoard(invalidCols));
+        assertThrows(InvalidBoardException.class, () -> new SudokuBoard(invalidCols));
     }
 
     @Test
     void constructorRejectsValuesOutsideZeroToNine() {
         int[][] boardWithNegative = createEmptyBoard();
         boardWithNegative[0][0] = -1;
-        assertThrows(IllegalArgumentException.class, () -> new SudokuBoard(boardWithNegative));
+        assertThrows(InvalidCellValueException.class, () -> new SudokuBoard(boardWithNegative));
 
         int[][] boardWithTooLarge = createEmptyBoard();
         boardWithTooLarge[1][1] = 10;
-        assertThrows(IllegalArgumentException.class, () -> new SudokuBoard(boardWithTooLarge));
+        assertThrows(InvalidCellValueException.class, () -> new SudokuBoard(boardWithTooLarge));
     }
 
     @Test
     void getAndSetRejectInvalidCoordinates() {
         SudokuBoard board = new SudokuBoard(createEmptyBoard());
 
-        assertThrows(IllegalArgumentException.class, () -> board.getValue(-1, 0));
-        assertThrows(IllegalArgumentException.class, () -> board.getValue(9, 0));
-        assertThrows(IllegalArgumentException.class, () -> board.getValue(0, 9));
+        assertThrows(InvalidCoordinateException.class, () -> board.getValue(-1, 0));
+        assertThrows(InvalidCoordinateException.class, () -> board.getValue(9, 0));
+        assertThrows(InvalidCoordinateException.class, () -> board.getValue(0, 9));
 
-        assertThrows(IllegalArgumentException.class, () -> board.setValue(-1, 0, 5));
-        assertThrows(IllegalArgumentException.class, () -> board.setValue(0, 9, 5));
+        assertThrows(InvalidCoordinateException.class, () -> board.setValue(-1, 0, 5));
+        assertThrows(InvalidCoordinateException.class, () -> board.setValue(0, 9, 5));
     }
 
     @Test
     void setRejectsValueOutsideZeroToNine() {
         SudokuBoard board = new SudokuBoard(createEmptyBoard());
 
-        assertThrows(IllegalArgumentException.class, () -> board.setValue(0, 0, -1));
-        assertThrows(IllegalArgumentException.class, () -> board.setValue(0, 0, 10));
+        assertThrows(InvalidCellValueException.class, () -> board.setValue(0, 0, -1));
+        assertThrows(InvalidCellValueException.class, () -> board.setValue(0, 0, 10));
     }
 
     @Test
@@ -105,9 +108,9 @@ class SudokuBoardTest {
         board.write(1, 2, 6);
         assertEquals(6, board.read(1, 2));
 
-        assertThrows(IllegalArgumentException.class, () -> board.read(-1, 0));
-        assertThrows(IllegalArgumentException.class, () -> board.write(0, 9, 3));
-        assertThrows(IllegalArgumentException.class, () -> board.write(0, 0, 10));
+        assertThrows(InvalidCoordinateException.class, () -> board.read(-1, 0));
+        assertThrows(InvalidCoordinateException.class, () -> board.write(0, 9, 3));
+        assertThrows(InvalidCellValueException.class, () -> board.write(0, 0, 10));
     }
 
     private static int[][] createEmptyBoard() {

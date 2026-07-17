@@ -1,5 +1,6 @@
 package com.sudokuengine.service;
 
+import com.sudokuengine.exception.InvalidBoardException;
 import com.sudokuengine.model.SudokuBoard;
 import com.sudokuengine.model.ValidationViolation;
 import com.sudokuengine.model.ViolationType;
@@ -121,6 +122,6 @@ class SudokuValidatorTest {
 
     @Test
     void nullBoardIsRejected() {
-        assertThrows(IllegalArgumentException.class, () -> validator.validate(null));
+        assertThrows(InvalidBoardException.class, () -> validator.validate(null));
     }
 }

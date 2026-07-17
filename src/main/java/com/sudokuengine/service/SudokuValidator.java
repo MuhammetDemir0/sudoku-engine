@@ -1,5 +1,6 @@
 package com.sudokuengine.service;
 
+import com.sudokuengine.exception.InvalidBoardException;
 import com.sudokuengine.model.SudokuBoard;
 import com.sudokuengine.model.ValidationViolation;
 import com.sudokuengine.model.ViolationType;
@@ -16,7 +17,7 @@ public class SudokuValidator {
 
     public List<ValidationViolation> validate(SudokuBoard board) {
         if (board == null) {
-            throw new IllegalArgumentException("Sudoku board cannot be null.");
+            throw new InvalidBoardException("Sudoku board cannot be null.");
         }
 
         List<ValidationViolation> violations = new ArrayList<>();

@@ -1,4 +1,4 @@
 /**
- * Global exception handling for the Sudoku Engine API.
+ * Domain and application exception types for Sudoku Engine.
  */
 package com.sudokuengine.exception;
