@@ -2,6 +2,8 @@ package com.sudokuengine.service;
 
 import com.sudokuengine.exception.InvalidBoardException;
 import com.sudokuengine.model.SolveResult;
+import com.sudokuengine.model.SolveStep;
+import com.sudokuengine.model.SolveStepType;
 import com.sudokuengine.model.SudokuBoard;
 import org.junit.jupiter.api.Test;
 
@@ -161,6 +163,92 @@ class BacktrackingSudokuSolverTest {
                 () -> solver.countSolutions(highlyAmbiguous, 2));
 
         assertEquals(2, count);
+    }
+
+    @Test
+    void stepTrackingRecordsChronologicalSequenceAndSolutionFound() {
+        SudokuBoard puzzle = new SudokuBoard(new int[][] {
+                { 5, 3, 0, 0, 7, 0, 0, 0, 0 },
+                { 6, 0, 0, 1, 9, 5, 0, 0, 0 },
+                { 0, 9, 8, 0, 0, 0, 0, 6, 0 },
+                { 8, 0, 0, 0, 6, 0, 0, 0, 3 },
+                { 4, 0, 0, 8, 0, 3, 0, 0, 1 },
+                { 7, 0, 0, 0, 2, 0, 0, 0, 6 },
+                { 0, 6, 0, 0, 0, 0, 2, 8, 0 },
+                { 0, 0, 0, 4, 1, 9, 0, 0, 5 },
+                { 0, 0, 0, 0, 8, 0, 0, 7, 9 }
+        });
+
+        SolveResult result = solver.solve(puzzle, true);
+        var steps = result.getSteps().orElseThrow();
+
+        assertFalse(steps.isEmpty());
+        for (int i = 0; i < steps.size(); i++) {
+            assertEquals(i + 1, steps.get(i).getSequence());
+        }
+        assertEquals(SolveStepType.SOLUTION_FOUND, steps.getLast().getType());
+    }
+
+    @Test
+    void stepTrackingRecordsPlacementAndRemovalActions() {
+        SudokuBoard puzzle = new SudokuBoard(new int[][] {
+                { 5, 3, 0, 0, 7, 0, 0, 0, 0 },
+                { 6, 0, 0, 1, 9, 5, 0, 0, 0 },
+                { 0, 9, 8, 0, 0, 0, 0, 6, 0 },
+                { 8, 0, 0, 0, 6, 0, 0, 0, 3 },
+                { 4, 0, 0, 8, 0, 3, 0, 0, 1 },
+                { 7, 0, 0, 0, 2, 0, 0, 0, 6 },
+                { 0, 6, 0, 0, 0, 0, 2, 8, 0 },
+                { 0, 0, 0, 4, 1, 9, 0, 0, 5 },
+                { 0, 0, 0, 0, 8, 0, 0, 7, 9 }
+        });
+
+        SolveResult result = solver.solve(puzzle, true);
+        var steps = result.getSteps().orElseThrow();
+
+        assertTrue(steps.stream().anyMatch(s -> s.getType() == SolveStepType.PLACE_VALUE));
+        assertTrue(steps.stream().anyMatch(s -> s.getType() == SolveStepType.REMOVE_VALUE));
+    }
+
+    @Test
+    void stepTrackingCanBeDisabled() {
+        SudokuBoard puzzle = new SudokuBoard(new int[][] {
+                { 5, 3, 0, 0, 7, 0, 0, 0, 0 },
+                { 6, 0, 0, 1, 9, 5, 0, 0, 0 },
+                { 0, 9, 8, 0, 0, 0, 0, 6, 0 },
+                { 8, 0, 0, 0, 6, 0, 0, 0, 3 },
+                { 4, 0, 0, 8, 0, 3, 0, 0, 1 },
+                { 7, 0, 0, 0, 2, 0, 0, 0, 6 },
+                { 0, 6, 0, 0, 0, 0, 2, 8, 0 },
+                { 0, 0, 0, 4, 1, 9, 0, 0, 5 },
+                { 0, 0, 0, 0, 8, 0, 0, 7, 9 }
+        });
+
+        SolveResult withTracking = solver.solve(puzzle, true);
+        SolveResult withoutTracking = solver.solve(puzzle, false);
+
+        assertTrue(withTracking.getSteps().isPresent());
+        assertTrue(withoutTracking.getSteps().isEmpty());
+    }
+
+    @Test
+    void trackedStepsContainDepthInformation() {
+        SudokuBoard puzzle = new SudokuBoard(new int[][] {
+                { 5, 3, 0, 0, 7, 0, 0, 0, 0 },
+                { 6, 0, 0, 1, 9, 5, 0, 0, 0 },
+                { 0, 9, 8, 0, 0, 0, 0, 6, 0 },
+                { 8, 0, 0, 0, 6, 0, 0, 0, 3 },
+                { 4, 0, 0, 8, 0, 3, 0, 0, 1 },
+                { 7, 0, 0, 0, 2, 0, 0, 0, 6 },
+                { 0, 6, 0, 0, 0, 0, 2, 8, 0 },
+                { 0, 0, 0, 4, 1, 9, 0, 0, 5 },
+                { 0, 0, 0, 0, 8, 0, 0, 7, 9 }
+        });
+
+        SolveResult result = solver.solve(puzzle, true);
+        for (SolveStep step : result.getSteps().orElseThrow()) {
+            assertTrue(step.getDepth() >= 0);
+        }
     }
 
     private static boolean hasEmptyCell(SudokuBoard board) {

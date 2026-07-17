@@ -1,6 +1,8 @@
 package com.sudokuengine.service;
 
 import com.sudokuengine.model.SolveResult;
+import com.sudokuengine.model.SolveStep;
+import com.sudokuengine.model.SolveStepType;
 import com.sudokuengine.model.SudokuBoard;
 import org.junit.jupiter.api.Test;
 
@@ -77,7 +79,9 @@ class SudokuSolverContractTest {
         SolveResult withoutSteps = SolveResult.unsolved(new SolveResult.Metrics(5, 1, 100L));
         SolveResult withSteps = SolveResult.unsolved(
                 new SolveResult.Metrics(5, 1, 100L),
-                List.of("Fill r0c0 with 7", "Backtrack r0c0"));
+            List.of(
+                new SolveStep(SolveStepType.PLACE_VALUE, 0, 0, 7, 1, 0),
+                new SolveStep(SolveStepType.REMOVE_VALUE, 0, 0, 0, 2, 0)));
 
         assertTrue(withoutSteps.getSteps().isEmpty());
         assertTrue(withSteps.getSteps().isPresent());

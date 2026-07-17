@@ -2,8 +2,13 @@ package com.sudokuengine.service;
 
 import com.sudokuengine.exception.InvalidBoardException;
 import com.sudokuengine.model.SolveResult;
+import com.sudokuengine.model.SolveStep;
+import com.sudokuengine.model.SolveStepType;
 import com.sudokuengine.model.SudokuBoard;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Recursive backtracking Sudoku solver implementation.
@@ -19,6 +24,21 @@ public class BacktrackingSudokuSolver implements SudokuSolver {
 
     public BacktrackingSudokuSolver(SudokuValidator validator) {
         this.validator = validator;
+    }
+
+    @Override
+    public SolveResult solve(SudokuBoard inputBoard) {
+        return solve(inputBoard, false);
+    }
+
+    /**
+     * Solves a board with optional step tracking for visualization.
+     */
+    public SolveResult solve(SudokuBoard inputBoard, boolean trackSteps) {
+        if (inputBoard == null) {
+            throw new InvalidBoardException("Input board cannot be null.");
+        }
+        return solveInternal(inputBoard.copy(), trackSteps);
     }
 
     /**
@@ -41,13 +61,19 @@ public class BacktrackingSudokuSolver implements SudokuSolver {
 
     @Override
     public SolveResult solveInternal(SudokuBoard workingBoard) {
+        return solveInternal(workingBoard, false);
+    }
+
+    private SolveResult solveInternal(SudokuBoard workingBoard, boolean trackSteps) {
         if (!validator.isValid(workingBoard)) {
             throw new InvalidBoardException("Initial board is invalid and cannot be solved.");
         }
 
         SearchMetrics searchMetrics = new SearchMetrics();
+        StepSequence stepSequence = new StepSequence();
+        List<SolveStep> steps = trackSteps ? new ArrayList<>() : null;
         long start = System.nanoTime();
-        boolean solved = solveRecursively(workingBoard, searchMetrics, 0);
+        boolean solved = solveRecursively(workingBoard, searchMetrics, 0, steps, stepSequence);
         long elapsed = System.nanoTime() - start;
 
         SolveResult.Metrics metrics = new SolveResult.Metrics(
@@ -57,18 +83,20 @@ public class BacktrackingSudokuSolver implements SudokuSolver {
                 elapsed);
 
         if (!solved) {
-            return SolveResult.unsolved(metrics);
+            return trackSteps ? SolveResult.unsolved(metrics, steps) : SolveResult.unsolved(metrics);
         }
-        return SolveResult.solved(workingBoard, metrics);
+        return trackSteps ? SolveResult.solved(workingBoard, metrics, steps) : SolveResult.solved(workingBoard, metrics);
     }
 
-    private boolean solveRecursively(SudokuBoard board, SearchMetrics metrics, int depth) {
+    private boolean solveRecursively(SudokuBoard board, SearchMetrics metrics, int depth,
+            List<SolveStep> steps, StepSequence sequence) {
         if (depth > metrics.maxRecursionDepth) {
             metrics.maxRecursionDepth = depth;
         }
 
         Cell emptyCell = findFirstEmptyCell(board);
         if (emptyCell == null) {
+            addStep(steps, sequence, SolveStepType.SOLUTION_FOUND, -1, -1, SudokuBoard.EMPTY, depth);
             return true;
         }
 
@@ -79,11 +107,15 @@ public class BacktrackingSudokuSolver implements SudokuSolver {
             }
 
             board.write(emptyCell.row(), emptyCell.col(), candidate);
-            if (solveRecursively(board, metrics, depth + 1)) {
+            addStep(steps, sequence, SolveStepType.PLACE_VALUE,
+                    emptyCell.row(), emptyCell.col(), candidate, depth);
+            if (solveRecursively(board, metrics, depth + 1, steps, sequence)) {
                 return true;
             }
 
             board.write(emptyCell.row(), emptyCell.col(), SudokuBoard.EMPTY);
+            addStep(steps, sequence, SolveStepType.REMOVE_VALUE,
+                    emptyCell.row(), emptyCell.col(), SudokuBoard.EMPTY, depth);
             metrics.backtracks++;
         }
         return false;
@@ -166,6 +198,22 @@ public class BacktrackingSudokuSolver implements SudokuSolver {
     }
 
     private record Cell(int row, int col) {
+    }
+
+    private static void addStep(List<SolveStep> steps, StepSequence sequence, SolveStepType type,
+            int row, int col, int value, int depth) {
+        if (steps == null) {
+            return;
+        }
+        steps.add(new SolveStep(type, row, col, value, sequence.next(), depth));
+    }
+
+    private static final class StepSequence {
+        private int current = 1;
+
+        private int next() {
+            return current++;
+        }
     }
 
     private static final class SearchMetrics {
