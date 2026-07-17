@@ -1,6 +1,8 @@
 package com.sudokuengine.service;
 
 import com.sudokuengine.exception.PuzzleGenerationException;
+import com.sudokuengine.config.DifficultyThresholdConfig;
+import com.sudokuengine.model.Difficulty;
 import com.sudokuengine.model.SudokuBoard;
 import com.sudokuengine.model.SudokuPuzzle;
 import org.springframework.stereotype.Component;
@@ -22,6 +24,8 @@ public class UniqueSudokuPuzzleGenerator {
 
     private final SudokuSolutionGenerator solutionGenerator;
     private final BacktrackingSudokuSolver solver;
+    private final DifficultyAnalysisService difficultyAnalysisService;
+    private final DifficultyThresholdConfig difficultyThresholdConfig;
     private final Random random;
     private final int maxAttempts;
 
@@ -34,8 +38,25 @@ public class UniqueSudokuPuzzleGenerator {
             BacktrackingSudokuSolver solver,
             Random random,
             int maxAttempts) {
+        this(solutionGenerator, solver, new DifficultyAnalysisService(), DifficultyThresholdConfig.defaults(),
+                random, maxAttempts);
+    }
+
+    public UniqueSudokuPuzzleGenerator(
+            SudokuSolutionGenerator solutionGenerator,
+            BacktrackingSudokuSolver solver,
+            DifficultyAnalysisService difficultyAnalysisService,
+            DifficultyThresholdConfig difficultyThresholdConfig,
+            Random random,
+            int maxAttempts) {
         this.solutionGenerator = Objects.requireNonNull(solutionGenerator, "Solution generator cannot be null.");
         this.solver = Objects.requireNonNull(solver, "Solver cannot be null.");
+        this.difficultyAnalysisService = Objects.requireNonNull(
+                difficultyAnalysisService,
+                "Difficulty analysis service cannot be null.");
+        this.difficultyThresholdConfig = Objects.requireNonNull(
+                difficultyThresholdConfig,
+                "Difficulty threshold config cannot be null.");
         this.random = Objects.requireNonNull(random, "Random dependency cannot be null.");
         if (maxAttempts < 1) {
             throw new IllegalArgumentException("Max attempts must be greater than zero.");
@@ -44,8 +65,15 @@ public class UniqueSudokuPuzzleGenerator {
     }
 
     public SudokuPuzzle generate() {
+        return generate(Difficulty.MEDIUM);
+    }
+
+    public SudokuPuzzle generate(Difficulty difficulty) {
+        Objects.requireNonNull(difficulty, "Difficulty cannot be null.");
+
         SudokuBoard solution = solutionGenerator.generate();
         SudokuBoard puzzle = solution.copy();
+        DifficultyThresholdConfig.Thresholds thresholds = difficultyThresholdConfig.get(difficulty);
 
         List<Integer> positions = shuffledPositions();
 
@@ -68,6 +96,14 @@ public class UniqueSudokuPuzzleGenerator {
             int solutionCount = solver.countSolutions(puzzle, 2);
             if (solutionCount != 1) {
                 puzzle.write(row, col, originalValue);
+                continue;
+            }
+
+            int clues = difficultyAnalysisService.countClues(puzzle);
+            if (clues <= thresholds.generationTargetMaximumClues()
+                    && clues >= thresholds.minimumClues()
+                    && difficultyAnalysisService.calculate(puzzle) == difficulty) {
+                return new SudokuPuzzle(puzzle, solution);
             }
         }
 
@@ -83,6 +119,16 @@ public class UniqueSudokuPuzzleGenerator {
             throw new PuzzleGenerationException(
                     "Failed to generate uniquely solvable puzzle: expected exactly one solution but found "
                             + finalSolutionCount + ".");
+        }
+
+        int finalClues = difficultyAnalysisService.countClues(puzzle);
+        Difficulty calculatedDifficulty = difficultyAnalysisService.calculate(puzzle);
+        if (finalClues > thresholds.generationTargetMaximumClues()
+                || finalClues < thresholds.minimumClues()
+                || calculatedDifficulty != difficulty) {
+            throw new PuzzleGenerationException(
+                    "Failed to generate " + difficulty + " puzzle within max attempts "
+                            + maxAttempts + "; calculated " + calculatedDifficulty + ".");
         }
 
         return new SudokuPuzzle(puzzle, solution);
