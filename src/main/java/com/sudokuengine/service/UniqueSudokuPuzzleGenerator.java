@@ -12,7 +12,8 @@ import java.util.Objects;
 import java.util.Random;
 
 /**
- * Generates uniquely solvable Sudoku puzzles by removing values from a full solution board.
+ * Generates uniquely solvable Sudoku puzzles by removing values from a full
+ * solution board.
  */
 @Component
 public class UniqueSudokuPuzzleGenerator {
