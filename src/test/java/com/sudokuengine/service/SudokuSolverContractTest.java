@@ -79,9 +79,9 @@ class SudokuSolverContractTest {
         SolveResult withoutSteps = SolveResult.unsolved(new SolveResult.Metrics(5, 1, 100L));
         SolveResult withSteps = SolveResult.unsolved(
                 new SolveResult.Metrics(5, 1, 100L),
-            List.of(
-                new SolveStep(SolveStepType.PLACE_VALUE, 0, 0, 7, 1, 0),
-                new SolveStep(SolveStepType.REMOVE_VALUE, 0, 0, 0, 2, 0)));
+                List.of(
+                        new SolveStep(SolveStepType.PLACE_VALUE, 0, 0, 7, 1, 0),
+                        new SolveStep(SolveStepType.REMOVE_VALUE, 0, 0, 0, 2, 0)));
 
         assertTrue(withoutSteps.getSteps().isEmpty());
         assertTrue(withSteps.getSteps().isPresent());

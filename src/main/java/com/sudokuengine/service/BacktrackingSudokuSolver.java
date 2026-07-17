@@ -85,7 +85,8 @@ public class BacktrackingSudokuSolver implements SudokuSolver {
         if (!solved) {
             return trackSteps ? SolveResult.unsolved(metrics, steps) : SolveResult.unsolved(metrics);
         }
-        return trackSteps ? SolveResult.solved(workingBoard, metrics, steps) : SolveResult.solved(workingBoard, metrics);
+        return trackSteps ? SolveResult.solved(workingBoard, metrics, steps)
+                : SolveResult.solved(workingBoard, metrics);
     }
 
     private boolean solveRecursively(SudokuBoard board, SearchMetrics metrics, int depth,
