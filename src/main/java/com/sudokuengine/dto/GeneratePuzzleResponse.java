@@ -10,13 +10,11 @@ import java.util.List;
  */
 public record GeneratePuzzleResponse(
         List<List<Integer>> puzzle,
-        List<List<Integer>> solution,
         Difficulty difficulty) {
 
     public static GeneratePuzzleResponse fromDomain(SudokuPuzzle puzzle, Difficulty difficulty) {
         return new GeneratePuzzleResponse(
                 BoardDtoMapper.fromDomain(puzzle.getPuzzle()),
-                BoardDtoMapper.fromDomain(puzzle.getSolution()),
                 difficulty);
     }
 }
