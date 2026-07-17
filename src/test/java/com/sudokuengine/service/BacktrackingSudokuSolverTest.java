@@ -5,6 +5,8 @@ import com.sudokuengine.model.SolveResult;
 import com.sudokuengine.model.SudokuBoard;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -100,6 +102,65 @@ class BacktrackingSudokuSolverTest {
         assertEquals(snapshot[0][2], puzzle.read(0, 2));
         assertEquals(snapshot[8][0], puzzle.read(8, 0));
         assertEquals(0, puzzle.read(0, 2));
+    }
+
+    @Test
+    void countSolutionsReturnsZeroForUnsolvableBoard() {
+        SudokuBoard unsolvable = new SudokuBoard(new int[][] {
+                { 0, 3, 4, 6, 7, 8, 9, 1, 2 },
+                { 5, 7, 2, 1, 9, 0, 3, 4, 8 },
+                { 1, 9, 8, 3, 4, 2, 5, 6, 7 },
+                { 8, 5, 9, 7, 6, 1, 4, 2, 3 },
+                { 4, 2, 6, 8, 5, 3, 7, 9, 1 },
+                { 7, 1, 3, 9, 2, 4, 8, 5, 6 },
+                { 9, 6, 1, 5, 3, 7, 2, 8, 4 },
+                { 2, 8, 7, 4, 1, 9, 6, 3, 5 },
+                { 3, 4, 5, 2, 8, 6, 1, 7, 9 }
+        });
+
+        int count = solver.countSolutions(unsolvable, 2);
+
+        assertEquals(0, count);
+    }
+
+    @Test
+    void countSolutionsReturnsOneForUniquePuzzle() {
+        SudokuBoard puzzle = new SudokuBoard(new int[][] {
+                { 5, 3, 0, 0, 7, 0, 0, 0, 0 },
+                { 6, 0, 0, 1, 9, 5, 0, 0, 0 },
+                { 0, 9, 8, 0, 0, 0, 0, 6, 0 },
+                { 8, 0, 0, 0, 6, 0, 0, 0, 3 },
+                { 4, 0, 0, 8, 0, 3, 0, 0, 1 },
+                { 7, 0, 0, 0, 2, 0, 0, 0, 6 },
+                { 0, 6, 0, 0, 0, 0, 2, 8, 0 },
+                { 0, 0, 0, 4, 1, 9, 0, 0, 5 },
+                { 0, 0, 0, 0, 8, 0, 0, 7, 9 }
+        });
+
+        int count = solver.countSolutions(puzzle, 2);
+
+        assertEquals(1, count);
+    }
+
+    @Test
+    void countSolutionsStopsAfterSecondSolutionWhenLimitIsTwo() {
+        SudokuBoard highlyAmbiguous = new SudokuBoard(new int[][] {
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+        });
+
+        int count = org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(
+                Duration.ofSeconds(1),
+                () -> solver.countSolutions(highlyAmbiguous, 2));
+
+        assertEquals(2, count);
     }
 
     private static boolean hasEmptyCell(SudokuBoard board) {
