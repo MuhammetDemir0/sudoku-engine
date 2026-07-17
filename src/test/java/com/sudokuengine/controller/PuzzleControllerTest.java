@@ -6,6 +6,7 @@ import com.sudokuengine.model.Difficulty;
 import com.sudokuengine.model.SudokuBoard;
 import com.sudokuengine.model.SudokuPuzzle;
 import com.sudokuengine.service.BacktrackingSudokuSolver;
+import com.sudokuengine.service.HintService;
 import com.sudokuengine.service.MrvSudokuSolver;
 import com.sudokuengine.service.SudokuValidator;
 import com.sudokuengine.service.UniqueSudokuPuzzleGenerator;
@@ -30,7 +31,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PuzzleController.class)
-@Import({ ApiExceptionHandler.class, BacktrackingSudokuSolver.class, MrvSudokuSolver.class, SudokuValidator.class })
+@Import({
+        ApiExceptionHandler.class,
+        BacktrackingSudokuSolver.class,
+        MrvSudokuSolver.class,
+        SudokuValidator.class,
+        HintService.class
+})
 class PuzzleControllerTest {
 
     @Autowired
@@ -241,6 +248,72 @@ class PuzzleControllerTest {
         assertFalse(body.toString().contains("StackTrace"));
     }
 
+    @Test
+    void validBoardReturnsHint() throws Exception {
+        mockMvc.perform(post("/api/v1/puzzles/hint")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(hintPayload(samplePuzzle().getPuzzle())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.row").isNumber())
+                .andExpect(jsonPath("$.col").isNumber())
+                .andExpect(jsonPath("$.value").isNumber())
+                .andExpect(jsonPath("$.reason").isNotEmpty());
+    }
+
+    @Test
+    void invalidBoardReturnsClearHintError() throws Exception {
+        SudokuBoard invalid = new SudokuBoard(new int[][] {
+                { 5, 5, 0, 0, 7, 0, 0, 0, 0 },
+                { 6, 0, 0, 1, 9, 5, 0, 0, 0 },
+                { 0, 9, 8, 0, 0, 0, 0, 6, 0 },
+                { 8, 0, 0, 0, 6, 0, 0, 0, 3 },
+                { 4, 0, 0, 8, 0, 3, 0, 0, 1 },
+                { 7, 0, 0, 0, 2, 0, 0, 0, 6 },
+                { 0, 6, 0, 0, 0, 0, 2, 8, 0 },
+                { 0, 0, 0, 4, 1, 9, 0, 0, 5 },
+                { 0, 0, 0, 0, 8, 0, 0, 7, 9 }
+        });
+
+        mockMvc.perform(post("/api/v1/puzzles/hint")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(hintPayload(invalid)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Board is invalid; fix rule violations before requesting a hint."))
+                .andExpect(jsonPath("$.trace").doesNotExist());
+    }
+
+    @Test
+    void completedBoardReturnsNoContentForHint() throws Exception {
+        mockMvc.perform(post("/api/v1/puzzles/hint")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(hintPayload(samplePuzzle().getSolution())))
+                .andExpect(status().isNoContent())
+                .andExpect(jsonPath("$").doesNotExist());
+    }
+
+    @Test
+    void unsolvableBoardReturnsNoHintError() throws Exception {
+        SudokuBoard unsolvable = new SudokuBoard(new int[][] {
+                { 0, 3, 4, 6, 7, 8, 9, 1, 2 },
+                { 5, 7, 2, 1, 9, 0, 3, 4, 8 },
+                { 1, 9, 8, 3, 4, 2, 5, 6, 7 },
+                { 8, 5, 9, 7, 6, 1, 4, 2, 3 },
+                { 4, 2, 6, 8, 5, 3, 7, 9, 1 },
+                { 7, 1, 3, 9, 2, 4, 8, 5, 6 },
+                { 9, 6, 1, 5, 3, 7, 2, 8, 4 },
+                { 2, 8, 7, 4, 1, 9, 6, 3, 5 },
+                { 3, 4, 5, 2, 8, 6, 1, 7, 9 }
+        });
+
+        mockMvc.perform(post("/api/v1/puzzles/hint")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(hintPayload(unsolvable)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.status").value(422))
+                .andExpect(jsonPath("$.message").value("No hint is available for this board."));
+    }
+
     private SudokuBoard responsePuzzle(MvcResult result) throws Exception {
         JsonNode puzzle = objectMapper.readTree(result.getResponse().getContentAsString()).get("puzzle");
         int[][] cells = new int[SudokuBoard.SIZE][SudokuBoard.SIZE];
@@ -263,6 +336,12 @@ class PuzzleControllerTest {
     }
 
     private String validatePayload(SudokuBoard board) throws Exception {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("board", board.toMatrix());
+        return objectMapper.writeValueAsString(payload);
+    }
+
+    private String hintPayload(SudokuBoard board) throws Exception {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("board", board.toMatrix());
         return objectMapper.writeValueAsString(payload);
