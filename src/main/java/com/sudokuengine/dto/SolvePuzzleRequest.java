@@ -15,13 +15,18 @@ public record SolvePuzzleRequest(
         @NotNull
         @Size(min = SudokuBoard.SIZE, max = SudokuBoard.SIZE)
         List<@NotNull @Size(min = SudokuBoard.SIZE, max = SudokuBoard.SIZE) List<@NotNull @Min(0) @Max(9) Integer>> board,
-        Boolean trackSteps) {
+        Boolean includeSteps,
+        SolverType solver) {
 
     public SudokuBoard toBoard() {
         return BoardDtoMapper.toDomain(board);
     }
 
-    public boolean shouldTrackSteps() {
-        return Boolean.TRUE.equals(trackSteps);
+    public boolean shouldIncludeSteps() {
+        return Boolean.TRUE.equals(includeSteps);
+    }
+
+    public SolverType requestedSolver() {
+        return solver == null ? SolverType.MRV : solver;
     }
 }

@@ -27,7 +27,7 @@ class ApiDtoValidationTest {
 
     @Test
     void solveRequestAcceptsValidBoard() {
-        SolvePuzzleRequest request = new SolvePuzzleRequest(validBoardPayload(), true);
+        SolvePuzzleRequest request = new SolvePuzzleRequest(validBoardPayload(), true, SolverType.MRV);
 
         assertTrue(validator.validate(request).isEmpty());
     }
@@ -36,7 +36,7 @@ class ApiDtoValidationTest {
     void solveRequestRejectsInvalidBoardShape() {
         List<List<Integer>> board = validBoardPayload();
         board.removeLast();
-        SolvePuzzleRequest request = new SolvePuzzleRequest(board, false);
+        SolvePuzzleRequest request = new SolvePuzzleRequest(board, false, SolverType.BACKTRACKING);
 
         assertFalse(validator.validate(request).isEmpty());
     }
@@ -72,12 +72,13 @@ class ApiDtoValidationTest {
                 { 0, 0, 0, 4, 1, 9, 0, 0, 5 },
                 { 0, 0, 0, 0, 8, 0, 0, 7, 9 }
         };
-        SolvePuzzleRequest request = new SolvePuzzleRequest(validBoardPayload(), null);
+        SolvePuzzleRequest request = new SolvePuzzleRequest(validBoardPayload(), null, null);
 
         SudokuBoard board = request.toBoard();
 
         assertArrayEquals(expected, board.toMatrix());
-        assertFalse(request.shouldTrackSteps());
+        assertFalse(request.shouldIncludeSteps());
+        assertTrue(request.requestedSolver() == SolverType.MRV);
     }
 
     @Test
