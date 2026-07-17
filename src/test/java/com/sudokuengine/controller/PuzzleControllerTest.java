@@ -38,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         SudokuValidator.class,
         HintService.class
 })
+@SuppressWarnings("null")
 class PuzzleControllerTest {
 
     @Autowired

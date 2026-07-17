@@ -35,7 +35,7 @@ class ApiDtoValidationTest {
     @Test
     void solveRequestRejectsInvalidBoardShape() {
         List<List<Integer>> board = validBoardPayload();
-        board.removeLast();
+        board.remove(board.size() - 1);
         SolvePuzzleRequest request = new SolvePuzzleRequest(board, false, SolverType.BACKTRACKING);
 
         assertFalse(validator.validate(request).isEmpty());
@@ -44,7 +44,7 @@ class ApiDtoValidationTest {
     @Test
     void validateRequestRejectsOutOfRangeCellValue() {
         List<List<Integer>> board = validBoardPayload();
-        board.getFirst().set(0, 10);
+        board.get(0).set(0, 10);
         ValidatePuzzleRequest request = new ValidatePuzzleRequest(board);
 
         assertFalse(validator.validate(request).isEmpty());
@@ -88,7 +88,7 @@ class ApiDtoValidationTest {
         List<List<Integer>> payload = BoardDtoMapper.fromDomain(board);
 
         assertTrue(payload.size() == SudokuBoard.SIZE);
-        assertTrue(payload.getFirst().size() == SudokuBoard.SIZE);
+        assertTrue(payload.get(0).size() == SudokuBoard.SIZE);
     }
 
     @Test

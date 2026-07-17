@@ -1,6 +1,6 @@
 # Sudoku Engine
 
-A full-stack Sudoku generation, solving and algorithm visualization platform built with **Java 25**, **Spring Boot 3.x**, **PostgreSQL**, and **vanilla JavaScript**.
+A full-stack Sudoku generation, solving and algorithm visualization platform built with **Java 21**, **Spring Boot 3.x**, **PostgreSQL**, and **vanilla JavaScript**.
 
 ## 📋 Project Overview
 
@@ -13,7 +13,7 @@ Sudoku Engine is a comprehensive platform for:
 ## 🛠️ Tech Stack
 
 ### Backend
-- **Language:** Java 25
+- **Language:** Java 21
 - **Framework:** Spring Boot 3.3.x
 - **Build Tool:** Maven
 - **Database:** PostgreSQL
@@ -69,7 +69,7 @@ sudoku-engine/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- **Java 25** or later
+- **Java 21** or later
 - **Maven 3.8+**
 - **Docker & Docker Compose** (for PostgreSQL)
 - **Git**

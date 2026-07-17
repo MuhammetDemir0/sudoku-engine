@@ -23,6 +23,23 @@ public final class BoardDtoMapper {
         return new SudokuBoard(cells);
     }
 
+    public static boolean isValidPayload(List<List<Integer>> board) {
+        if (board == null || board.size() != SudokuBoard.SIZE) {
+            return false;
+        }
+        for (List<Integer> row : board) {
+            if (row == null || row.size() != SudokuBoard.SIZE) {
+                return false;
+            }
+            for (Integer value : row) {
+                if (value == null || value < SudokuBoard.EMPTY || value > SudokuBoard.MAX_VALUE) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public static List<List<Integer>> fromDomain(SudokuBoard board) {
         int[][] cells = board.toMatrix();
         List<List<Integer>> rows = new ArrayList<>(SudokuBoard.SIZE);
