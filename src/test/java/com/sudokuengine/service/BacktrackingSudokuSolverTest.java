@@ -186,7 +186,7 @@ class BacktrackingSudokuSolverTest {
         for (int i = 0; i < steps.size(); i++) {
             assertEquals(i + 1, steps.get(i).getSequence());
         }
-        assertEquals(SolveStepType.SOLUTION_FOUND, steps.getLast().getType());
+        assertEquals(SolveStepType.SOLUTION_FOUND, steps.get(steps.size() - 1).getType());
     }
 
     @Test

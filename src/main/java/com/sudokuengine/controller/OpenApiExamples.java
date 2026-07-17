@@ -1,14 +1,14 @@
 package com.sudokuengine.controller;
 
-final class OpenApiExamples {
+public final class OpenApiExamples {
 
-    static final String GENERATE_REQUEST = """
+    public static final String GENERATE_REQUEST = """
             {
               "difficulty": "MEDIUM"
             }
             """;
 
-    static final String GENERATE_RESPONSE = """
+    public static final String GENERATE_RESPONSE = """
             {
               "puzzle": [
                 [5,3,0,0,7,0,0,0,0],
@@ -25,7 +25,7 @@ final class OpenApiExamples {
             }
             """;
 
-    static final String SOLVE_REQUEST = """
+    public static final String SOLVE_REQUEST = """
             {
               "board": [
                 [5,3,0,0,7,0,0,0,0],
@@ -43,7 +43,7 @@ final class OpenApiExamples {
             }
             """;
 
-    static final String SOLVE_RESPONSE = """
+    public static final String SOLVE_RESPONSE = """
             {
               "solved": true,
               "board": [
@@ -76,7 +76,7 @@ final class OpenApiExamples {
             }
             """;
 
-    static final String VALIDATE_REQUEST = """
+    public static final String VALIDATE_REQUEST = """
             {
               "board": [
                 [5,5,0,0,7,0,0,0,0],
@@ -92,7 +92,7 @@ final class OpenApiExamples {
             }
             """;
 
-    static final String VALIDATE_RESPONSE = """
+    public static final String VALIDATE_RESPONSE = """
             {
               "valid": false,
               "violations": [
@@ -107,7 +107,7 @@ final class OpenApiExamples {
             }
             """;
 
-    static final String HINT_REQUEST = """
+    public static final String HINT_REQUEST = """
             {
               "board": [
                 [5,3,0,0,7,0,0,0,0],
@@ -123,7 +123,7 @@ final class OpenApiExamples {
             }
             """;
 
-    static final String HINT_RESPONSE = """
+    public static final String HINT_RESPONSE = """
             {
               "row": 0,
               "col": 2,
@@ -132,7 +132,7 @@ final class OpenApiExamples {
             }
             """;
 
-    static final String ERROR_400 = """
+    public static final String ERROR_400 = """
             {
               "timestamp": "2026-07-17T10:15:30Z",
               "status": 400,
@@ -145,7 +145,7 @@ final class OpenApiExamples {
             }
             """;
 
-    static final String ERROR_422 = """
+    public static final String ERROR_422 = """
             {
               "timestamp": "2026-07-17T10:15:30Z",
               "status": 422,
@@ -156,7 +156,7 @@ final class OpenApiExamples {
             }
             """;
 
-    static final String ERROR_500 = """
+    public static final String ERROR_500 = """
             {
               "timestamp": "2026-07-17T10:15:30Z",
               "status": 500,

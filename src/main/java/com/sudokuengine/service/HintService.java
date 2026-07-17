@@ -79,7 +79,7 @@ public class HintService {
                 }
 
                 List<Integer> candidates = candidatesFor(board, row, col);
-                if (best == null || candidates.size() < bestCandidates.size()) {
+                if (bestCandidates == null || candidates.size() < bestCandidates.size()) {
                     best = new Cell(row, col);
                     bestCandidates = candidates;
                     if (candidates.size() <= 1) {

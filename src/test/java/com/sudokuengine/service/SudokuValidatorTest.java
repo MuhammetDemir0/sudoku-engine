@@ -54,7 +54,7 @@ class SudokuValidatorTest {
         List<ValidationViolation> violations = validator.validate(board);
 
         assertEquals(1, violations.size());
-        assertEquals(ViolationType.ROW_DUPLICATE, violations.getFirst().getType());
+        assertEquals(ViolationType.ROW_DUPLICATE, violations.get(0).getType());
         assertFalse(validator.isValid(board));
     }
 
@@ -75,7 +75,7 @@ class SudokuValidatorTest {
         List<ValidationViolation> violations = validator.validate(board);
 
         assertEquals(1, violations.size());
-        assertEquals(ViolationType.COLUMN_DUPLICATE, violations.getFirst().getType());
+        assertEquals(ViolationType.COLUMN_DUPLICATE, violations.get(0).getType());
     }
 
     @Test
@@ -95,7 +95,7 @@ class SudokuValidatorTest {
         List<ValidationViolation> violations = validator.validate(board);
 
         assertEquals(1, violations.size());
-        assertEquals(ViolationType.BOX_DUPLICATE, violations.getFirst().getType());
+        assertEquals(ViolationType.BOX_DUPLICATE, violations.get(0).getType());
     }
 
     @Test
