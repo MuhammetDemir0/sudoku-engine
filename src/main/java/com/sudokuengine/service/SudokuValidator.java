@@ -50,8 +50,7 @@ public class SudokuValidator {
                         row,
                         col,
                         value,
-                        "Duplicate value " + value + " found in row " + row + "."
-                ));
+                        "Duplicate value " + value + " found in row " + row + "."));
             }
         }
     }
@@ -73,8 +72,7 @@ public class SudokuValidator {
                         row,
                         col,
                         value,
-                        "Duplicate value " + value + " found in column " + col + "."
-                ));
+                        "Duplicate value " + value + " found in column " + col + "."));
             }
         }
     }
@@ -99,8 +97,7 @@ public class SudokuValidator {
                                 col,
                                 value,
                                 "Duplicate value " + value + " found in 3x3 box starting at ("
-                                        + boxRowStart + "," + boxColStart + ")."
-                        ));
+                                        + boxRowStart + "," + boxColStart + ")."));
                     }
                 }
             }
