@@ -98,6 +98,18 @@ class SudokuBoardTest {
         assertEquals(SudokuBoard.EMPTY, board.getValue(4, 4));
     }
 
+    @Test
+    void readAndWriteMethodsWorkAndValidateInput() {
+        SudokuBoard board = new SudokuBoard(createEmptyBoard());
+
+        board.write(1, 2, 6);
+        assertEquals(6, board.read(1, 2));
+
+        assertThrows(IllegalArgumentException.class, () -> board.read(-1, 0));
+        assertThrows(IllegalArgumentException.class, () -> board.write(0, 9, 3));
+        assertThrows(IllegalArgumentException.class, () -> board.write(0, 0, 10));
+    }
+
     private static int[][] createEmptyBoard() {
         return new int[9][9];
     }

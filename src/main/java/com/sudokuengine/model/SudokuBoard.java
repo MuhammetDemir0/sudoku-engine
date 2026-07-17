@@ -30,10 +30,24 @@ public final class SudokuBoard {
         return cells[row][col];
     }
 
+    /**
+     * Reads the value at the given coordinate.
+     */
+    public int read(int row, int col) {
+        return getValue(row, col);
+    }
+
     public void setValue(int row, int col, int value) {
         validateCoordinate(row, col);
         validateValue(value);
         cells[row][col] = value;
+    }
+
+    /**
+     * Writes a value at the given coordinate.
+     */
+    public void write(int row, int col, int value) {
+        setValue(row, col, value);
     }
 
     /**
