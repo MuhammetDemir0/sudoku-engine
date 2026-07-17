@@ -5,10 +5,13 @@ import com.sudokuengine.dto.GeneratePuzzleResponse;
 import com.sudokuengine.dto.SolvePuzzleRequest;
 import com.sudokuengine.dto.SolvePuzzleResponse;
 import com.sudokuengine.dto.SolverType;
+import com.sudokuengine.dto.ValidatePuzzleRequest;
+import com.sudokuengine.dto.ValidatePuzzleResponse;
 import com.sudokuengine.model.SolveResult;
 import com.sudokuengine.model.SudokuPuzzle;
 import com.sudokuengine.service.BacktrackingSudokuSolver;
 import com.sudokuengine.service.MrvSudokuSolver;
+import com.sudokuengine.service.SudokuValidator;
 import com.sudokuengine.service.UniqueSudokuPuzzleGenerator;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -27,14 +30,17 @@ public class PuzzleController {
     private final UniqueSudokuPuzzleGenerator puzzleGenerator;
     private final BacktrackingSudokuSolver backtrackingSolver;
     private final MrvSudokuSolver mrvSolver;
+    private final SudokuValidator validator;
 
     public PuzzleController(
             UniqueSudokuPuzzleGenerator puzzleGenerator,
             BacktrackingSudokuSolver backtrackingSolver,
-            MrvSudokuSolver mrvSolver) {
+            MrvSudokuSolver mrvSolver,
+            SudokuValidator validator) {
         this.puzzleGenerator = puzzleGenerator;
         this.backtrackingSolver = backtrackingSolver;
         this.mrvSolver = mrvSolver;
+        this.validator = validator;
     }
 
     @PostMapping("/generate")
@@ -50,5 +56,10 @@ public class PuzzleController {
             case MRV -> mrvSolver.solve(request.toBoard(), request.shouldIncludeSteps());
         };
         return ResponseEntity.ok(SolvePuzzleResponse.fromDomain(result));
+    }
+
+    @PostMapping("/validate")
+    public ResponseEntity<ValidatePuzzleResponse> validate(@Valid @RequestBody ValidatePuzzleRequest request) {
+        return ResponseEntity.ok(ValidatePuzzleResponse.fromDomain(validator.validate(request.toBoard())));
     }
 }

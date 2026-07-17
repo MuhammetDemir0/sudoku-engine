@@ -187,6 +187,60 @@ class PuzzleControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void validateReturnsRowColumnAndBoxViolationsTogether() throws Exception {
+        SudokuBoard invalid = new SudokuBoard(new int[][] {
+                { 1, 0, 0, 1, 0, 0, 0, 0, 0 },
+                { 0, 3, 0, 0, 0, 0, 0, 0, 2 },
+                { 0, 0, 3, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 2 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+        });
+
+        mockMvc.perform(post("/api/v1/puzzles/validate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validatePayload(invalid)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valid").value(false))
+                .andExpect(jsonPath("$.violations.length()").value(3))
+                .andExpect(jsonPath("$.violations[?(@.type == 'ROW_DUPLICATE')]").exists())
+                .andExpect(jsonPath("$.violations[?(@.type == 'COLUMN_DUPLICATE')]").exists())
+                .andExpect(jsonPath("$.violations[?(@.type == 'BOX_DUPLICATE')]").exists());
+    }
+
+    @Test
+    void validateValidBoardReturnsEmptyViolationList() throws Exception {
+        mockMvc.perform(post("/api/v1/puzzles/validate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(validatePayload(samplePuzzle().getSolution())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valid").value(true))
+                .andExpect(jsonPath("$.violations").isArray())
+                .andExpect(jsonPath("$.violations.length()").value(0));
+    }
+
+    @Test
+    void validationPayloadErrorsDoNotExposeTechnicalDetails() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/puzzles/validate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"board\":[[10]]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.validationErrors").exists())
+                .andExpect(jsonPath("$.trace").doesNotExist())
+                .andExpect(jsonPath("$.exception").doesNotExist())
+                .andReturn();
+
+        JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
+
+        assertFalse(body.toString().contains("java.lang"));
+        assertFalse(body.toString().contains("StackTrace"));
+    }
+
     private SudokuBoard responsePuzzle(MvcResult result) throws Exception {
         JsonNode puzzle = objectMapper.readTree(result.getResponse().getContentAsString()).get("puzzle");
         int[][] cells = new int[SudokuBoard.SIZE][SudokuBoard.SIZE];
@@ -205,6 +259,12 @@ class PuzzleControllerTest {
         if (solver != null) {
             payload.put("solver", solver);
         }
+        return objectMapper.writeValueAsString(payload);
+    }
+
+    private String validatePayload(SudokuBoard board) throws Exception {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("board", board.toMatrix());
         return objectMapper.writeValueAsString(payload);
     }
 
