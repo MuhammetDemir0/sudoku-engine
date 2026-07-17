@@ -1,6 +1,8 @@
 package com.sudokuengine.service;
 
 import com.sudokuengine.exception.PuzzleGenerationException;
+import com.sudokuengine.config.DifficultyThresholdConfig;
+import com.sudokuengine.model.Difficulty;
 import com.sudokuengine.model.SudokuBoard;
 import com.sudokuengine.model.SudokuPuzzle;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,29 @@ class UniqueSudokuPuzzleGeneratorTest {
 
         assertTrue(hasEmptyCells(puzzle));
         assertTrue(solver.countSolutions(puzzle, 2) == 1);
+    }
+
+    @Test
+    void generatedPuzzleCanTargetRequestedDifficulty() {
+        DifficultyThresholdConfig thresholdConfig = DifficultyThresholdConfig.defaults();
+        ClueOnlyDifficultyAnalysisService difficultyAnalysisService =
+                new ClueOnlyDifficultyAnalysisService(thresholdConfig);
+        UniqueSudokuPuzzleGenerator generator = new UniqueSudokuPuzzleGenerator(
+                new SudokuSolutionGenerator(new Random(19L)),
+                new BacktrackingSudokuSolver(),
+                difficultyAnalysisService,
+                thresholdConfig,
+                new Random(19L),
+                200);
+
+        SudokuPuzzle generated = generator.generate(Difficulty.EASY);
+        SudokuBoard puzzle = generated.getPuzzle();
+        int clues = difficultyAnalysisService.countClues(puzzle);
+
+        assertTrue(hasEmptyCells(puzzle));
+        assertTrue(solver.countSolutions(puzzle, 2) == 1);
+        assertTrue(clues >= thresholdConfig.get(Difficulty.EASY).minimumClues());
+        assertTrue(clues <= thresholdConfig.get(Difficulty.EASY).generationTargetMaximumClues());
     }
 
     @Test
@@ -77,5 +102,18 @@ class UniqueSudokuPuzzleGeneratorTest {
             }
         }
         return false;
+    }
+
+    private static final class ClueOnlyDifficultyAnalysisService extends DifficultyAnalysisService {
+        private final DifficultyThresholdConfig thresholdConfig;
+
+        private ClueOnlyDifficultyAnalysisService(DifficultyThresholdConfig thresholdConfig) {
+            this.thresholdConfig = thresholdConfig;
+        }
+
+        @Override
+        public Difficulty calculate(SudokuBoard puzzle) {
+            return thresholdConfig.classifyByClues(countClues(puzzle));
+        }
     }
 }
