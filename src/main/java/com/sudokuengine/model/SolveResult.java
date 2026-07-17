@@ -66,31 +66,48 @@ public final class SolveResult {
      */
     public static final class Metrics {
 
-        private final int assignmentsTried;
+        private final int visitedNodes;
         private final int backtracks;
+        private final int maxRecursionDepth;
         private final long elapsedNanos;
 
         public Metrics(int assignmentsTried, int backtracks, long elapsedNanos) {
-            if (assignmentsTried < 0) {
-                throw new IllegalArgumentException("Assignments tried cannot be negative.");
+            this(assignmentsTried, backtracks, 0, elapsedNanos);
+        }
+
+        public Metrics(int visitedNodes, int backtracks, int maxRecursionDepth, long elapsedNanos) {
+            if (visitedNodes < 0) {
+                throw new IllegalArgumentException("Visited nodes cannot be negative.");
             }
             if (backtracks < 0) {
                 throw new IllegalArgumentException("Backtracks cannot be negative.");
             }
+            if (maxRecursionDepth < 0) {
+                throw new IllegalArgumentException("Max recursion depth cannot be negative.");
+            }
             if (elapsedNanos < 0) {
                 throw new IllegalArgumentException("Elapsed nanos cannot be negative.");
             }
-            this.assignmentsTried = assignmentsTried;
+            this.visitedNodes = visitedNodes;
             this.backtracks = backtracks;
+            this.maxRecursionDepth = maxRecursionDepth;
             this.elapsedNanos = elapsedNanos;
         }
 
         public int getAssignmentsTried() {
-            return assignmentsTried;
+            return visitedNodes;
+        }
+
+        public int getVisitedNodes() {
+            return visitedNodes;
         }
 
         public int getBacktracks() {
             return backtracks;
+        }
+
+        public int getMaxRecursionDepth() {
+            return maxRecursionDepth;
         }
 
         public long getElapsedNanos() {
