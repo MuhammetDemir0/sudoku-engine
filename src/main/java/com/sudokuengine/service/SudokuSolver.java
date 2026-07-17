@@ -10,7 +10,8 @@ import java.util.Objects;
  * Contract for Sudoku solving algorithms.
  *
  * <p>
- * Implementations receive a defensive copy through {@link #solveInternal(SudokuBoard)} so
+ * Implementations receive a defensive copy through
+ * {@link #solveInternal(SudokuBoard)} so
  * input boards are never mutated.
  * </p>
  */
