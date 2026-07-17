@@ -14,9 +14,9 @@ public final class SolveResult {
     private final boolean solved;
     private final SudokuBoard board;
     private final Metrics metrics;
-    private final List<String> steps;
+    private final List<SolveStep> steps;
 
-    private SolveResult(boolean solved, SudokuBoard board, Metrics metrics, List<String> steps) {
+    private SolveResult(boolean solved, SudokuBoard board, Metrics metrics, List<SolveStep> steps) {
         this.solved = solved;
         this.board = board == null ? null : board.copy();
         this.metrics = Objects.requireNonNull(metrics, "Metrics cannot be null.");
@@ -30,7 +30,7 @@ public final class SolveResult {
         return new SolveResult(true, solvedBoard, metrics, null);
     }
 
-    public static SolveResult solved(SudokuBoard solvedBoard, Metrics metrics, List<String> steps) {
+    public static SolveResult solved(SudokuBoard solvedBoard, Metrics metrics, List<SolveStep> steps) {
         if (solvedBoard == null) {
             throw new InvalidBoardException("Solved board cannot be null.");
         }
@@ -41,7 +41,7 @@ public final class SolveResult {
         return new SolveResult(false, null, metrics, null);
     }
 
-    public static SolveResult unsolved(Metrics metrics, List<String> steps) {
+    public static SolveResult unsolved(Metrics metrics, List<SolveStep> steps) {
         return new SolveResult(false, null, metrics, steps);
     }
 
@@ -57,7 +57,7 @@ public final class SolveResult {
         return metrics;
     }
 
-    public Optional<List<String>> getSteps() {
+    public Optional<List<SolveStep>> getSteps() {
         return steps == null ? Optional.empty() : Optional.of(List.copyOf(steps));
     }
 
