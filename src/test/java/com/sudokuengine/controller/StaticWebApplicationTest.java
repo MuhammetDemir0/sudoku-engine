@@ -62,6 +62,30 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("dataset.state = state")));
     }
 
+    @Test
+    void boardFrontendDetectsConflictsAndVerifiesCompletionWithBackend() throws Exception {
+        mockMvc.perform(get("/js/board.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("export function detectConflicts(board)")))
+                .andExpect(content().string(containsString("addGroupConflicts(conflicts, \"row\"")))
+                .andExpect(content().string(containsString("addGroupConflicts(conflicts, \"column\"")))
+                .andExpect(content().string(containsString("addGroupConflicts(conflicts, \"box\"")))
+                .andExpect(content().string(containsString("cell.classList.add(\"conflict\", `conflict-${conflict.type}`)")))
+                .andExpect(content().string(containsString("clearConflicts()")));
+
+        mockMvc.perform(get("/js/game.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("async function onBoardChange(state)")))
+                .andExpect(content().string(containsString("validateBoard(state.board)")))
+                .andExpect(content().string(containsString("Completed board verified by the server.")));
+
+        mockMvc.perform(get("/css/app.css"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(".cell.conflict-row")))
+                .andExpect(content().string(containsString(".cell.conflict-column")))
+                .andExpect(content().string(containsString(".cell.conflict-box")));
+    }
+
     private void assertStaticFile(String path) throws Exception {
         mockMvc.perform(get(path))
                 .andExpect(status().isOk());

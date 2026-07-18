@@ -194,6 +194,39 @@ button:disabled {
     color: var(--danger);
 }
 
+.cell.conflict {
+    background: #fff1f0;
+    color: var(--danger);
+}
+
+.cell.conflict-row {
+    box-shadow: inset 0 4px 0 #c2413b;
+}
+
+.cell.conflict-column {
+    box-shadow: inset 4px 0 0 #9f5b00;
+}
+
+.cell.conflict-box {
+    box-shadow: inset 0 0 0 3px #7c3aed;
+}
+
+.cell.conflict-row.conflict-column {
+    box-shadow: inset 0 4px 0 #c2413b, inset 4px 0 0 #9f5b00;
+}
+
+.cell.conflict-row.conflict-box {
+    box-shadow: inset 0 4px 0 #c2413b, inset 0 0 0 3px #7c3aed;
+}
+
+.cell.conflict-column.conflict-box {
+    box-shadow: inset 4px 0 0 #9f5b00, inset 0 0 0 3px #7c3aed;
+}
+
+.cell.conflict-row.conflict-column.conflict-box {
+    box-shadow: inset 0 4px 0 #c2413b, inset 4px 0 0 #9f5b00, inset 0 0 0 3px #7c3aed;
+}
+
 .side-panel {
     display: grid;
     gap: 18px;

@@ -2,8 +2,9 @@ const SIZE = 9;
 const EMPTY = 0;
 
 export class SudokuBoardView {
-    constructor(container) {
+    constructor(container, onChange = () => {}) {
         this.container = container;
+        this.onChange = onChange;
         this.initialBoard = emptyBoard();
         this.render(this.initialBoard);
     }
@@ -35,13 +36,18 @@ export class SudokuBoardView {
                     input.readOnly = true;
                 }
 
-                input.addEventListener("input", () => normalizeCell(input));
-                input.addEventListener("keydown", event => handleCellKeyDown(event, this.container));
+                input.addEventListener("input", () => {
+                    normalizeCell(input);
+                    this.notifyChange();
+                });
+                input.addEventListener("keydown", event => handleCellKeyDown(event, this));
                 input.addEventListener("focus", () => highlightPeers(input, this.container));
                 input.addEventListener("blur", () => clearSelection(this.container));
                 this.container.appendChild(input);
             }
         }
+
+        this.updateConflicts();
     }
 
     loadPuzzle(board) {
@@ -80,6 +86,7 @@ export class SudokuBoardView {
                 }
             }
         });
+        this.updateConflicts();
     }
 
     markHint(row, col, value) {
@@ -89,6 +96,7 @@ export class SudokuBoardView {
             cell.value = String(value);
             cell.classList.add("hint");
             cell.focus();
+            this.updateConflicts();
         }
     }
 
@@ -106,6 +114,46 @@ export class SudokuBoardView {
         this.cells().forEach(cell => {
             cell.classList.remove("hint", "invalid", "solved");
         });
+    }
+
+    notifyChange() {
+        this.clearMarks();
+        const conflicts = this.updateConflicts();
+        this.onChange({
+            board: this.read(),
+            conflicts,
+            complete: this.isComplete()
+        });
+    }
+
+    updateConflicts() {
+        const conflicts = detectConflicts(this.read());
+        this.clearConflicts();
+
+        conflicts.forEach(conflict => {
+            conflict.cells.forEach(([row, col]) => {
+                const cell = this.cellAt(row, col);
+                if (cell) {
+                    cell.classList.add("conflict", `conflict-${conflict.type}`);
+                    cell.setAttribute("aria-invalid", "true");
+                    cell.title = addConflictTitle(cell.title, conflict.type);
+                }
+            });
+        });
+
+        return conflicts;
+    }
+
+    clearConflicts() {
+        this.cells().forEach(cell => {
+            cell.classList.remove("conflict", "conflict-row", "conflict-column", "conflict-box");
+            cell.removeAttribute("aria-invalid");
+            cell.removeAttribute("title");
+        });
+    }
+
+    isComplete() {
+        return this.read().every(row => row.every(value => value !== EMPTY));
     }
 
     cellAt(row, col) {
@@ -139,9 +187,57 @@ function toCellValue(value) {
     return /^[1-9]$/.test(value) ? Number(value) : EMPTY;
 }
 
-function handleCellKeyDown(event, container) {
+export function detectConflicts(board) {
+    const conflicts = [];
+
+    for (let row = 0; row < SIZE; row++) {
+        addGroupConflicts(conflicts, "row", board[row].map((value, col) => ({ row, col, value })));
+    }
+
+    for (let col = 0; col < SIZE; col++) {
+        addGroupConflicts(conflicts, "column", board.map((row, rowIndex) => ({
+            row: rowIndex,
+            col,
+            value: row[col]
+        })));
+    }
+
+    for (let boxRow = 0; boxRow < SIZE; boxRow += 3) {
+        for (let boxCol = 0; boxCol < SIZE; boxCol += 3) {
+            const cells = [];
+            for (let row = boxRow; row < boxRow + 3; row++) {
+                for (let col = boxCol; col < boxCol + 3; col++) {
+                    cells.push({ row, col, value: board[row][col] });
+                }
+            }
+            addGroupConflicts(conflicts, "box", cells);
+        }
+    }
+
+    return conflicts;
+}
+
+function addGroupConflicts(conflicts, type, cells) {
+    const positionsByValue = new Map();
+    cells
+        .filter(cell => cell.value !== EMPTY)
+        .forEach(cell => {
+            if (!positionsByValue.has(cell.value)) {
+                positionsByValue.set(cell.value, []);
+            }
+            positionsByValue.get(cell.value).push([cell.row, cell.col]);
+        });
+
+    positionsByValue.forEach((positions, value) => {
+        if (positions.length > 1) {
+            conflicts.push({ type, value, cells: positions });
+        }
+    });
+}
+
+function handleCellKeyDown(event, boardView) {
     if (event.key.startsWith("Arrow")) {
-        moveFocus(event, container);
+        moveFocus(event, boardView.container);
         return;
     }
 
@@ -156,6 +252,7 @@ function handleCellKeyDown(event, container) {
         event.preventDefault();
         cell.value = "";
         cell.classList.remove("hint", "invalid", "solved");
+        boardView.notifyChange();
         return;
     }
 
@@ -163,6 +260,7 @@ function handleCellKeyDown(event, container) {
         event.preventDefault();
         cell.value = event.key;
         cell.classList.remove("hint", "invalid", "solved");
+        boardView.notifyChange();
         return;
     }
 
@@ -210,4 +308,16 @@ function clearSelection(container) {
     container.querySelectorAll(".cell.peer, .cell.selected").forEach(cell => {
         cell.classList.remove("peer", "selected");
     });
+}
+
+function addConflictTitle(existingTitle, type) {
+    const label = `${capitalize(type)} conflict`;
+    if (!existingTitle) {
+        return label;
+    }
+    return existingTitle.includes(label) ? existingTitle : `${existingTitle}; ${label}`;
+}
+
+function capitalize(value) {
+    return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
