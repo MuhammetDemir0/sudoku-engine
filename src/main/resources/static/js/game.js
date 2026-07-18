@@ -8,6 +8,8 @@ const timer = new Timer(document.getElementById("timerDisplay"));
 const visualizer = new SolverVisualizer(boardView);
 let completionValidationRequest = 0;
 let hasActivePuzzle = false;
+let gameCompleted = false;
+let hintCount = 0;
 
 const elements = {
     difficulty: document.getElementById("difficulty"),
@@ -22,7 +24,8 @@ const elements = {
     visitedNodes: document.getElementById("visitedNodes"),
     backtracks: document.getElementById("backtracks"),
     maxDepth: document.getElementById("maxDepth"),
-    runtime: document.getElementById("runtime")
+    runtime: document.getElementById("runtime"),
+    hintCount: document.getElementById("hintCount")
 };
 
 elements.generate.addEventListener("click", onGenerate);
@@ -38,6 +41,8 @@ async function onGenerate() {
         visualizer.stop();
         boardView.clear();
         resetMetrics();
+        resetHintCount();
+        setGameCompleted(false);
         timer.reset();
         setMessage("Loading a new puzzle.", "loading");
 
@@ -60,6 +65,7 @@ async function onSolve() {
 
         await visualizer.play(response.steps, response.board);
         timer.stop();
+        setGameCompleted(true);
         setMessage("Solved.", "success");
     });
 }
@@ -68,11 +74,14 @@ async function onHint() {
     await run("Finding hint", async () => {
         const response = await requestHint(boardView.read());
         if (response === null) {
+            timer.stop();
+            setGameCompleted(true);
             setMessage("The board is already complete.", "success");
             return;
         }
         boardView.markHint(response.row, response.col, response.value);
-        setMessage(response.reason);
+        incrementHintCount();
+        setMessage(`${response.reason} Hint ${hintCount} used.`);
     });
 }
 
@@ -81,6 +90,10 @@ async function onValidate() {
         const response = await validateBoard(boardView.read());
         if (response.valid) {
             boardView.clearMarks();
+            if (boardView.isComplete()) {
+                timer.stop();
+                setGameCompleted(true);
+            }
             setMessage("Board is valid.", "success");
             return;
         }
@@ -117,6 +130,7 @@ async function onBoardChange(state) {
         if (response.valid) {
             timer.stop();
             setStatus("Ready");
+            setGameCompleted(true);
             setMessage("Completed board verified by the server.", "success");
             return;
         }
@@ -146,6 +160,8 @@ function onReset() {
 
     boardView.reset();
     resetMetrics();
+    resetHintCount();
+    setGameCompleted(false);
     timer.reset();
     timer.start();
     setStatus("Ready");
@@ -158,6 +174,8 @@ function onClear() {
     boardView.clear();
     hasActivePuzzle = false;
     resetMetrics();
+    resetHintCount();
+    setGameCompleted(false);
     timer.reset();
     setStatus("Ready");
     setMessage("Board cleared.");
@@ -188,6 +206,7 @@ function setBusy(isBusy) {
         .forEach(element => {
             element.disabled = isBusy;
         });
+    elements.hint.disabled = isBusy || gameCompleted;
 }
 
 function setStatus(value) {
@@ -215,6 +234,21 @@ function resetMetrics() {
     elements.backtracks.textContent = "-";
     elements.maxDepth.textContent = "-";
     elements.runtime.textContent = "-";
+}
+
+function incrementHintCount() {
+    hintCount++;
+    elements.hintCount.textContent = String(hintCount);
+}
+
+function resetHintCount() {
+    hintCount = 0;
+    elements.hintCount.textContent = "0";
+}
+
+function setGameCompleted(isCompleted) {
+    gameCompleted = isCompleted;
+    elements.hint.disabled = isCompleted;
 }
 
 function formatNanos(nanos) {

@@ -31,6 +31,8 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("Sudoku Engine")))
                 .andExpect(content().string(containsString("id=\"difficulty\"")))
                 .andExpect(content().string(containsString("New Game")))
+                .andExpect(content().string(containsString("id=\"hintBtn\"")))
+                .andExpect(content().string(containsString("id=\"hintCount\"")))
                 .andExpect(content().string(containsString("type=\"module\" src=\"/js/game.js\"")));
     }
 
@@ -109,6 +111,28 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("validateBoard(state.board)")))
                 .andExpect(content().string(containsString("Completed board verified by the server.")))
                 .andExpect(content().string(containsString("server violation(s) found.")));
+    }
+
+    @Test
+    void hintFrontendSendsBoardTracksUsageAndDisablesAfterCompletion() throws Exception {
+        mockMvc.perform(get("/js/api.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("postJson(\"/hint\", { board })")));
+
+        mockMvc.perform(get("/js/board.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("markHint(row, col, value)")))
+                .andExpect(content().string(containsString("cell.classList.add(\"hint\")")))
+                .andExpect(content().string(containsString("cell.focus()")));
+
+        mockMvc.perform(get("/js/game.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("requestHint(boardView.read())")))
+                .andExpect(content().string(containsString("let hintCount = 0;")))
+                .andExpect(content().string(containsString("incrementHintCount();")))
+                .andExpect(content().string(containsString("elements.hintCount.textContent = String(hintCount);")))
+                .andExpect(content().string(containsString("elements.hint.disabled = isBusy || gameCompleted;")))
+                .andExpect(content().string(containsString("setGameCompleted(true);")));
     }
 
     private void assertStaticFile(String path) throws Exception {
