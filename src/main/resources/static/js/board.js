@@ -20,6 +20,8 @@ export class SudokuBoardView {
                 input.inputMode = "numeric";
                 input.autocomplete = "off";
                 input.maxLength = 1;
+                input.pattern = "[1-9]";
+                input.ariaLabel = `Row ${row + 1}, column ${col + 1}`;
                 input.dataset.row = String(row);
                 input.dataset.col = String(col);
 
@@ -34,7 +36,9 @@ export class SudokuBoardView {
                 }
 
                 input.addEventListener("input", () => normalizeCell(input));
-                input.addEventListener("keydown", event => handleNavigation(event, this.container));
+                input.addEventListener("keydown", event => handleCellKeyDown(event, this.container));
+                input.addEventListener("focus", () => highlightPeers(input, this.container));
+                input.addEventListener("blur", () => clearSelection(this.container));
                 this.container.appendChild(input);
             }
         }
@@ -122,6 +126,10 @@ export function cloneBoard(board) {
 }
 
 function normalizeCell(input) {
+    if (input.readOnly) {
+        return;
+    }
+
     const match = input.value.match(/[1-9]/);
     input.value = match ? match[0] : "";
     input.classList.remove("hint", "invalid", "solved");
@@ -131,7 +139,39 @@ function toCellValue(value) {
     return /^[1-9]$/.test(value) ? Number(value) : EMPTY;
 }
 
-function handleNavigation(event, container) {
+function handleCellKeyDown(event, container) {
+    if (event.key.startsWith("Arrow")) {
+        moveFocus(event, container);
+        return;
+    }
+
+    const cell = event.currentTarget;
+    const isEditingKey = event.key.length === 1 || event.key === "Backspace" || event.key === "Delete";
+    if (cell.readOnly && isEditingKey) {
+        event.preventDefault();
+        return;
+    }
+
+    if (event.key === "Backspace" || event.key === "Delete") {
+        event.preventDefault();
+        cell.value = "";
+        cell.classList.remove("hint", "invalid", "solved");
+        return;
+    }
+
+    if (/^[1-9]$/.test(event.key)) {
+        event.preventDefault();
+        cell.value = event.key;
+        cell.classList.remove("hint", "invalid", "solved");
+        return;
+    }
+
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+    }
+}
+
+function moveFocus(event, container) {
     const keys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
     if (!keys.has(event.key)) {
         return;
@@ -152,4 +192,22 @@ function handleNavigation(event, container) {
     if (target) {
         target.focus();
     }
+}
+
+function highlightPeers(cell, container) {
+    clearSelection(container);
+
+    const row = cell.dataset.row;
+    const col = cell.dataset.col;
+
+    container.querySelectorAll(`[data-row="${row}"], [data-col="${col}"]`).forEach(peer => {
+        peer.classList.add("peer");
+    });
+    cell.classList.add("selected");
+}
+
+function clearSelection(container) {
+    container.querySelectorAll(".cell.peer, .cell.selected").forEach(cell => {
+        cell.classList.remove("peer", "selected");
+    });
 }
