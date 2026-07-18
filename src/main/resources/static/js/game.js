@@ -3,9 +3,10 @@ import { SudokuBoardView } from "./board.js";
 import { Timer } from "./timer.js";
 import { SolverVisualizer } from "./visualizer.js";
 
-const boardView = new SudokuBoardView(document.getElementById("board"));
+const boardView = new SudokuBoardView(document.getElementById("board"), onBoardChange);
 const timer = new Timer(document.getElementById("timerDisplay"));
 const visualizer = new SolverVisualizer(boardView);
+let completionValidationRequest = 0;
 
 const elements = {
     difficulty: document.getElementById("difficulty"),
@@ -32,6 +33,7 @@ elements.clear.addEventListener("click", onClear);
 
 async function onGenerate() {
     await run("Loading new game", async () => {
+        invalidateCompletionValidation();
         visualizer.stop();
         boardView.clear();
         resetMetrics();
@@ -85,7 +87,51 @@ async function onValidate() {
     });
 }
 
+async function onBoardChange(state) {
+    completionValidationRequest++;
+
+    if (state.conflicts.length > 0) {
+        setStatus("Check conflicts");
+        setMessage(formatConflictSummary(state.conflicts), "error");
+        return;
+    }
+
+    setStatus("Ready");
+    if (!state.complete) {
+        setMessage("No conflicts found.");
+        return;
+    }
+
+    const requestId = completionValidationRequest;
+    setStatus("Verifying");
+    setMessage("Board is complete. Verifying with the server.", "loading");
+
+    try {
+        const response = await validateBoard(state.board);
+        if (requestId !== completionValidationRequest) {
+            return;
+        }
+
+        if (response.valid) {
+            timer.stop();
+            setStatus("Ready");
+            setMessage("Completed board verified by the server.", "success");
+            return;
+        }
+
+        boardView.markInvalid(response.violations);
+        setStatus("Check conflicts");
+        setMessage(`${response.violations.length} server violation(s) found.`, "error");
+    } catch (error) {
+        if (requestId === completionValidationRequest) {
+            setStatus("Error");
+            setMessage(error.message, "error");
+        }
+    }
+}
+
 function onReset() {
+    invalidateCompletionValidation();
     visualizer.stop();
     boardView.reset();
     resetMetrics();
@@ -96,12 +142,17 @@ function onReset() {
 }
 
 function onClear() {
+    invalidateCompletionValidation();
     visualizer.stop();
     boardView.clear();
     resetMetrics();
     timer.reset();
     setStatus("Ready");
     setMessage("Board cleared.");
+}
+
+function invalidateCompletionValidation() {
+    completionValidationRequest++;
 }
 
 async function run(status, action) {
@@ -159,4 +210,14 @@ function formatNanos(nanos) {
         return "-";
     }
     return `${(nanos / 1_000_000).toFixed(2)} ms`;
+}
+
+function formatConflictSummary(conflicts) {
+    const counts = conflicts.reduce((summary, conflict) => {
+        summary[conflict.type] = (summary[conflict.type] || 0) + 1;
+        return summary;
+    }, {});
+    return Object.entries(counts)
+        .map(([type, count]) => `${count} ${type}`)
+        .join(", ") + " conflict(s) found.";
 }
