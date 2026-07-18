@@ -3,6 +3,19 @@
 Puzzles are classified as `EASY`, `MEDIUM`, `HARD`, or `EXPERT` by
 `DifficultyAnalysisService`.
 
+## Decision Flow
+
+```mermaid
+flowchart TD
+    Puzzle[Puzzle board] --> Clues[Count clues]
+    Puzzle --> Solve[Run solver metrics]
+    Clues --> ClueBand[Classify clue-count band]
+    Solve --> MetricBand[Classify solver effort band]
+    ClueBand --> Harder[Choose harder classification]
+    MetricBand --> Harder
+    Harder --> Difficulty[EASY / MEDIUM / HARD / EXPERT]
+```
+
 ## Calculation
 
 `DifficultyAnalysisService.calculate(SudokuBoard puzzle)` evaluates two

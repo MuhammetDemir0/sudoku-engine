@@ -11,13 +11,16 @@ let completionValidationRequest = 0;
 let hasActivePuzzle = false;
 let gameCompleted = false;
 let hintCount = 0;
+let gamePaused = false;
+let pencilMode = false;
 
 const elements = {
     difficulty: document.getElementById("difficulty"),
     generate: document.getElementById("generateBtn"),
     solve: document.getElementById("solveBtn"),
     hint: document.getElementById("hintBtn"),
-    validate: document.getElementById("validateBtn"),
+    pauseGame: document.getElementById("pauseGameBtn"),
+    pencil: document.getElementById("pencilBtn"),
     reset: document.getElementById("resetBtn"),
     clear: document.getElementById("clearBtn"),
     playVisualizer: document.getElementById("playVizBtn"),
@@ -45,7 +48,8 @@ visualizer.setSpeed(elements.speed.value);
 elements.generate.addEventListener("click", onGenerate);
 elements.solve.addEventListener("click", onSolve);
 elements.hint.addEventListener("click", onHint);
-elements.validate.addEventListener("click", onValidate);
+elements.pauseGame.addEventListener("click", onPauseGame);
+elements.pencil.addEventListener("click", onTogglePencil);
 elements.reset.addEventListener("click", onReset);
 elements.clear.addEventListener("click", onClear);
 elements.playVisualizer.addEventListener("click", onPlayVisualization);
@@ -60,6 +64,7 @@ async function onGenerate() {
         boardView.clear();
         resetMetrics();
         resetHintCount();
+        setGamePaused(false);
         setGameCompleted(false);
         timer.reset();
         setMessage("Loading a new puzzle.", "loading");
@@ -123,24 +128,11 @@ async function onHint() {
     });
 }
 
-async function onValidate() {
-    await run("Validating", async () => {
-        const response = await validateBoard(boardView.read());
-        if (response.valid) {
-            boardView.clearMarks();
-            if (boardView.isComplete()) {
-                timer.stop();
-                setGameCompleted(true);
-            }
-            setMessage("Board is valid.", "success");
-            return;
-        }
-        boardView.markInvalid(response.violations);
-        setMessage(`${response.violations.length} violation(s) found.`, "error");
-    });
-}
-
 async function onBoardChange(state) {
+    if (gamePaused) {
+        return;
+    }
+
     completionValidationRequest++;
 
     if (state.conflicts.length > 0) {
@@ -192,6 +184,7 @@ async function onBoardChange(state) {
 function onReset() {
     invalidateCompletionValidation();
     visualizer.clear();
+    setGamePaused(false);
     if (!hasActivePuzzle) {
         boardView.clear();
         resetMetrics();
@@ -214,6 +207,7 @@ function onReset() {
 function onClear() {
     invalidateCompletionValidation();
     visualizer.clear();
+    setGamePaused(false);
     boardView.clear();
     hasActivePuzzle = false;
     resetMetrics();
@@ -222,6 +216,21 @@ function onClear() {
     timer.reset();
     setStatus("Ready");
     setMessage("Board cleared.");
+}
+
+function onPauseGame() {
+    if (!hasActivePuzzle || gameCompleted) {
+        return;
+    }
+    setGamePaused(!gamePaused);
+}
+
+function onTogglePencil() {
+    pencilMode = !pencilMode;
+    boardView.setPencilMode(pencilMode);
+    elements.pencil.setAttribute("aria-pressed", String(pencilMode));
+    elements.pencil.classList.toggle("active", pencilMode);
+    setMessage(pencilMode ? "Pencil mode enabled." : "Pencil mode disabled.");
 }
 
 function invalidateCompletionValidation() {
@@ -251,10 +260,7 @@ function setBusy(isBusy) {
         .forEach(element => {
             element.disabled = isBusy;
         });
-    elements.hint.disabled = isBusy || gameCompleted;
-    elements.playVisualizer.disabled = isBusy || !visualizer.hasSteps() || gameCompleted;
-    elements.pauseVisualizer.disabled = isBusy || !visualizer.hasSteps();
-    elements.resetVisualizer.disabled = isBusy || !visualizer.hasSteps();
+    updateControlAvailability(isBusy);
 }
 
 function setStatus(value) {
@@ -267,6 +273,35 @@ function setMessage(value, state = "info") {
     if (state === "error" || state === "success") {
         toasts.show(value, state);
     }
+}
+
+function setGamePaused(isPaused) {
+    gamePaused = isPaused;
+    boardView.setPaused(isPaused);
+    if (isPaused) {
+        visualizer.pause();
+        timer.pause();
+        elements.pauseGame.textContent = "Resume Game";
+        setStatus("Paused");
+        setMessage("Game paused.");
+    } else {
+        if (hasActivePuzzle && !gameCompleted && !timer.isRunning()) {
+            timer.resume();
+        }
+        elements.pauseGame.textContent = "Pause Game";
+        setStatus("Ready");
+    }
+    updateControlAvailability(false);
+}
+
+function updateControlAvailability(isBusy = false) {
+    elements.hint.disabled = isBusy || gameCompleted || gamePaused;
+    elements.solve.disabled = isBusy || gamePaused;
+    elements.pencil.disabled = isBusy || gameCompleted || gamePaused;
+    elements.pauseGame.disabled = isBusy || !hasActivePuzzle || gameCompleted;
+    elements.playVisualizer.disabled = isBusy || !visualizer.hasSteps() || gameCompleted || gamePaused;
+    elements.pauseVisualizer.disabled = isBusy || !visualizer.hasSteps();
+    elements.resetVisualizer.disabled = isBusy || !visualizer.hasSteps() || gamePaused;
 }
 
 function updateMetrics(metrics) {
@@ -299,8 +334,12 @@ function resetHintCount() {
 
 function setGameCompleted(isCompleted) {
     gameCompleted = isCompleted;
+    if (isCompleted) {
+        setGamePaused(false);
+    }
     elements.hint.disabled = isCompleted;
     elements.playVisualizer.disabled = isCompleted || !visualizer.hasSteps();
+    updateControlAvailability(false);
 }
 
 function formatNanos(nanos) {
@@ -324,7 +363,7 @@ function updateVisualizerState(state) {
     elements.stepProgress.textContent = state.loaded
         ? `Step ${state.index} of ${state.total}`
         : "No steps loaded.";
-    elements.playVisualizer.disabled = !state.loaded || state.playing || gameCompleted;
+    elements.playVisualizer.disabled = !state.loaded || state.playing || gameCompleted || gamePaused;
     elements.pauseVisualizer.disabled = !state.loaded || !state.playing;
-    elements.resetVisualizer.disabled = !state.loaded || state.playing;
+    elements.resetVisualizer.disabled = !state.loaded || state.playing || gamePaused;
 }
