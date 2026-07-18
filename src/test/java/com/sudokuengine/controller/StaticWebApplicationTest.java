@@ -33,6 +33,10 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("New Game")))
                 .andExpect(content().string(containsString("id=\"hintBtn\"")))
                 .andExpect(content().string(containsString("id=\"hintCount\"")))
+                .andExpect(content().string(containsString("id=\"playVizBtn\"")))
+                .andExpect(content().string(containsString("id=\"pauseVizBtn\"")))
+                .andExpect(content().string(containsString("id=\"resetVizBtn\"")))
+                .andExpect(content().string(containsString("id=\"speedControl\"")))
                 .andExpect(content().string(containsString("type=\"module\" src=\"/js/game.js\"")));
     }
 
@@ -133,6 +137,36 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("elements.hintCount.textContent = String(hintCount);")))
                 .andExpect(content().string(containsString("elements.hint.disabled = isBusy || gameCompleted;")))
                 .andExpect(content().string(containsString("setGameCompleted(true);")));
+    }
+
+    @Test
+    void solverVisualizationSupportsPlaybackSpeedAndMetrics() throws Exception {
+        mockMvc.perform(get("/js/game.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("solvePuzzle(startBoard, true, \"MRV\")")))
+                .andExpect(content().string(containsString("visualizer.load(response.steps, response.board, startBoard)")))
+                .andExpect(content().string(containsString("elements.playVisualizer.addEventListener(\"click\", onPlayVisualization)")))
+                .andExpect(content().string(containsString("elements.pauseVisualizer.addEventListener(\"click\", onPauseVisualization)")))
+                .andExpect(content().string(containsString("elements.resetVisualizer.addEventListener(\"click\", onResetVisualization)")))
+                .andExpect(content().string(containsString("visualizer.setSpeed(elements.speed.value)")))
+                .andExpect(content().string(containsString("updateMetrics(response.metrics)")));
+
+        mockMvc.perform(get("/js/visualizer.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("scheduleNextStep()")))
+                .andExpect(content().string(containsString("this.applyNextStep();")))
+                .andExpect(content().string(containsString("this.index += 1;")))
+                .andExpect(content().string(containsString("pause()")))
+                .andExpect(content().string(containsString("resetBoardToStart()")))
+                .andExpect(content().string(containsString("this.boardView.write(this.startBoard);")))
+                .andExpect(content().string(containsString("visual-remove")))
+                .andExpect(content().string(containsString("visual-place")));
+
+        mockMvc.perform(get("/css/app.css"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(".cell.visual-place")))
+                .andExpect(content().string(containsString(".cell.visual-remove")))
+                .andExpect(content().string(containsString(".visualizer-controls")));
     }
 
     private void assertStaticFile(String path) throws Exception {

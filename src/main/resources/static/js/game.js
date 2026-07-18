@@ -5,7 +5,7 @@ import { SolverVisualizer } from "./visualizer.js";
 
 const boardView = new SudokuBoardView(document.getElementById("board"), onBoardChange);
 const timer = new Timer(document.getElementById("timerDisplay"));
-const visualizer = new SolverVisualizer(boardView);
+let visualizer;
 let completionValidationRequest = 0;
 let hasActivePuzzle = false;
 let gameCompleted = false;
@@ -19,6 +19,11 @@ const elements = {
     validate: document.getElementById("validateBtn"),
     reset: document.getElementById("resetBtn"),
     clear: document.getElementById("clearBtn"),
+    playVisualizer: document.getElementById("playVizBtn"),
+    pauseVisualizer: document.getElementById("pauseVizBtn"),
+    resetVisualizer: document.getElementById("resetVizBtn"),
+    speed: document.getElementById("speedControl"),
+    stepProgress: document.getElementById("stepProgress"),
     status: document.getElementById("statusText"),
     message: document.getElementById("messageText"),
     visitedNodes: document.getElementById("visitedNodes"),
@@ -28,17 +33,24 @@ const elements = {
     hintCount: document.getElementById("hintCount")
 };
 
+visualizer = new SolverVisualizer(boardView, updateVisualizerState);
+visualizer.setSpeed(elements.speed.value);
+
 elements.generate.addEventListener("click", onGenerate);
 elements.solve.addEventListener("click", onSolve);
 elements.hint.addEventListener("click", onHint);
 elements.validate.addEventListener("click", onValidate);
 elements.reset.addEventListener("click", onReset);
 elements.clear.addEventListener("click", onClear);
+elements.playVisualizer.addEventListener("click", onPlayVisualization);
+elements.pauseVisualizer.addEventListener("click", onPauseVisualization);
+elements.resetVisualizer.addEventListener("click", onResetVisualization);
+elements.speed.addEventListener("input", () => visualizer.setSpeed(elements.speed.value));
 
 async function onGenerate() {
     await run("Loading new game", async () => {
         invalidateCompletionValidation();
-        visualizer.stop();
+        visualizer.clear();
         boardView.clear();
         resetMetrics();
         resetHintCount();
@@ -56,18 +68,38 @@ async function onGenerate() {
 
 async function onSolve() {
     await run("Solving", async () => {
-        const response = await solvePuzzle(boardView.read(), true, "MRV");
+        const startBoard = boardView.read();
+        const response = await solvePuzzle(startBoard, true, "MRV");
         updateMetrics(response.metrics);
         if (!response.solved) {
             setMessage("This board could not be solved.", "error");
             return;
         }
 
-        await visualizer.play(response.steps, response.board);
+        visualizer.load(response.steps, response.board, startBoard);
+        setGameCompleted(false);
+        setMessage("Solver steps loaded. Press Play to animate.", "success");
+    });
+}
+
+async function onPlayVisualization() {
+    const completed = await visualizer.play();
+    if (completed) {
         timer.stop();
         setGameCompleted(true);
         setMessage("Solved.", "success");
-    });
+    }
+}
+
+function onPauseVisualization() {
+    visualizer.pause();
+    setMessage("Visualization paused.");
+}
+
+function onResetVisualization() {
+    visualizer.reset();
+    setGameCompleted(false);
+    setMessage("Visualization reset.");
 }
 
 async function onHint() {
@@ -148,7 +180,7 @@ async function onBoardChange(state) {
 
 function onReset() {
     invalidateCompletionValidation();
-    visualizer.stop();
+    visualizer.clear();
     if (!hasActivePuzzle) {
         boardView.clear();
         resetMetrics();
@@ -170,7 +202,7 @@ function onReset() {
 
 function onClear() {
     invalidateCompletionValidation();
-    visualizer.stop();
+    visualizer.clear();
     boardView.clear();
     hasActivePuzzle = false;
     resetMetrics();
@@ -207,6 +239,9 @@ function setBusy(isBusy) {
             element.disabled = isBusy;
         });
     elements.hint.disabled = isBusy || gameCompleted;
+    elements.playVisualizer.disabled = isBusy || !visualizer.hasSteps() || gameCompleted;
+    elements.pauseVisualizer.disabled = isBusy || !visualizer.hasSteps();
+    elements.resetVisualizer.disabled = isBusy || !visualizer.hasSteps();
 }
 
 function setStatus(value) {
@@ -249,6 +284,7 @@ function resetHintCount() {
 function setGameCompleted(isCompleted) {
     gameCompleted = isCompleted;
     elements.hint.disabled = isCompleted;
+    elements.playVisualizer.disabled = isCompleted || !visualizer.hasSteps();
 }
 
 function formatNanos(nanos) {
@@ -266,4 +302,13 @@ function formatConflictSummary(conflicts) {
     return Object.entries(counts)
         .map(([type, count]) => `${count} ${type}`)
         .join(", ") + " conflict(s) found.";
+}
+
+function updateVisualizerState(state) {
+    elements.stepProgress.textContent = state.loaded
+        ? `Step ${state.index} of ${state.total}`
+        : "No steps loaded.";
+    elements.playVisualizer.disabled = !state.loaded || state.playing || gameCompleted;
+    elements.pauseVisualizer.disabled = !state.loaded || !state.playing;
+    elements.resetVisualizer.disabled = !state.loaded || state.playing;
 }

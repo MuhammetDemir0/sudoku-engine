@@ -185,6 +185,16 @@ button:disabled {
     color: var(--success);
 }
 
+.cell.visual-place {
+    background: #e9f8ef;
+    color: var(--success);
+}
+
+.cell.visual-remove {
+    background: #fff2df;
+    color: #9f5b00;
+}
+
 .cell.hint {
     background: #fff4cc;
 }
@@ -265,6 +275,30 @@ button:disabled {
 #generateBtn:hover,
 #solveBtn:hover {
     background: var(--accent-dark);
+}
+
+.visualizer-controls {
+    display: grid;
+    gap: 10px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+}
+
+.visualizer-controls label {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.visualizer-controls input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+}
+
+.visualizer-controls p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
 }
 
 .metrics {
