@@ -86,6 +86,31 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString(".cell.conflict-box")));
     }
 
+    @Test
+    void gameplayFlowUsesTimerResetAndBackendCompletionChecks() throws Exception {
+        mockMvc.perform(get("/js/timer.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("window.setInterval")))
+                .andExpect(content().string(containsString("window.clearInterval")))
+                .andExpect(content().string(containsString("this.display.textContent = \"00:00\"")));
+
+        mockMvc.perform(get("/js/board.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("this.initialBoard = cloneBoard(board);")))
+                .andExpect(content().string(containsString("this.render(this.initialBoard, { givens: this.initialBoard });")));
+
+        mockMvc.perform(get("/js/game.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("let hasActivePuzzle = false;")))
+                .andExpect(content().string(containsString("hasActivePuzzle = true;")))
+                .andExpect(content().string(containsString("timer.start();")))
+                .andExpect(content().string(containsString("timer.stop();")))
+                .andExpect(content().string(containsString("No puzzle to reset.")))
+                .andExpect(content().string(containsString("validateBoard(state.board)")))
+                .andExpect(content().string(containsString("Completed board verified by the server.")))
+                .andExpect(content().string(containsString("server violation(s) found.")));
+    }
+
     private void assertStaticFile(String path) throws Exception {
         mockMvc.perform(get(path))
                 .andExpect(status().isOk());

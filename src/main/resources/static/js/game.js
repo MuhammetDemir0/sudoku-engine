@@ -7,6 +7,7 @@ const boardView = new SudokuBoardView(document.getElementById("board"), onBoardC
 const timer = new Timer(document.getElementById("timerDisplay"));
 const visualizer = new SolverVisualizer(boardView);
 let completionValidationRequest = 0;
+let hasActivePuzzle = false;
 
 const elements = {
     difficulty: document.getElementById("difficulty"),
@@ -42,6 +43,7 @@ async function onGenerate() {
 
         const response = await generatePuzzle(elements.difficulty.value);
         boardView.loadPuzzle(response.puzzle);
+        hasActivePuzzle = true;
         timer.start();
         setMessage(`${response.difficulty} puzzle ready.`, "success");
     });
@@ -133,6 +135,15 @@ async function onBoardChange(state) {
 function onReset() {
     invalidateCompletionValidation();
     visualizer.stop();
+    if (!hasActivePuzzle) {
+        boardView.clear();
+        resetMetrics();
+        timer.reset();
+        setStatus("Ready");
+        setMessage("No puzzle to reset.");
+        return;
+    }
+
     boardView.reset();
     resetMetrics();
     timer.reset();
@@ -145,6 +156,7 @@ function onClear() {
     invalidateCompletionValidation();
     visualizer.stop();
     boardView.clear();
+    hasActivePuzzle = false;
     resetMetrics();
     timer.reset();
     setStatus("Ready");
