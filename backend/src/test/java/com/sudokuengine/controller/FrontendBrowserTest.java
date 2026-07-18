@@ -16,7 +16,6 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.edge.EdgeOptions;
-import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -85,13 +84,14 @@ class FrontendBrowserTest {
         assertEquals("Ready", text(By.id("statusText")));
         assertEquals(81, driver.findElements(By.cssSelector("#board .cell")).size());
         assertTrue(displayed(By.id("generateBtn")));
-        assertTrue(displayed(By.id("difficulty")));
+        assertTrue(displayed(By.cssSelector(".difficulty-tab[data-difficulty='MEDIUM']")));
+        assertEquals(9, driver.findElements(By.cssSelector("#numberPad button[data-value]")).size());
     }
 
     @Test
     void userCanStartNewGameChooseDifficultyAndRequestHint() throws Exception {
         openHomePageWithMockApi();
-        new Select(driver.findElement(By.id("difficulty"))).selectByValue("EXPERT");
+        driver.findElement(By.cssSelector(".difficulty-tab[data-difficulty='EXPERT']")).click();
 
         driver.findElement(By.id("generateBtn")).click();
         waitForMessage("EXPERT puzzle ready.");

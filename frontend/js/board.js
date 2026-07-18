@@ -9,6 +9,8 @@ export class SudokuBoardView {
         this.notes = createNotes();
         this.pencilMode = false;
         this.paused = false;
+        this.locked = false;
+        this.selected = null;
         this.render(this.initialBoard);
     }
 
@@ -38,6 +40,7 @@ export class SudokuBoardView {
                 const value = board[row][col];
                 if (value !== EMPTY) {
                     input.value = String(value);
+                    input.classList.add("has-value");
                 }
 
                 if (givens[row][col] !== EMPTY) {
@@ -53,7 +56,7 @@ export class SudokuBoardView {
                 renderNotes(notes, this.notes[row][col]);
 
                 input.addEventListener("input", () => {
-                    if (this.paused) {
+                    if (this.paused || this.locked) {
                         input.value = "";
                         return;
                     }
@@ -66,13 +69,23 @@ export class SudokuBoardView {
                         return;
                     }
                     normalizeCell(input);
+                    syncValueClass(input);
                     if (input.value) {
                         this.clearNotes(row, col);
+                        this.removePeerNotes(row, col, Number(input.value));
                     }
-                    this.notifyChange();
+                    this.notifyChange({
+                        row,
+                        col,
+                        value: toCellValue(input.value),
+                        source: "value"
+                    });
                 });
                 input.addEventListener("keydown", event => handleCellKeyDown(event, this));
-                input.addEventListener("focus", () => highlightPeers(input, this.container));
+                input.addEventListener("focus", () => {
+                    this.selected = { row, col };
+                    highlightPeers(input, this.container);
+                });
                 input.addEventListener("blur", () => clearSelection(this.container));
 
                 wrapper.appendChild(input);
@@ -83,22 +96,27 @@ export class SudokuBoardView {
 
         this.updateConflicts();
         this.setPaused(this.paused);
+        this.setLocked(this.locked);
     }
 
     loadPuzzle(board) {
         this.initialBoard = cloneBoard(board);
         this.notes = createNotes();
+        this.locked = false;
         this.render(board, { givens: board });
     }
 
     reset() {
         this.notes = createNotes();
+        this.locked = false;
         this.render(this.initialBoard, { givens: this.initialBoard });
     }
 
     clear() {
         this.initialBoard = emptyBoard();
         this.notes = createNotes();
+        this.locked = false;
+        this.selected = null;
         this.render(this.initialBoard);
     }
 
@@ -119,8 +137,10 @@ export class SudokuBoardView {
             const value = board[row][col];
             if (!cell.classList.contains("given")) {
                 cell.value = value === EMPTY ? "" : String(value);
+                syncValueClass(cell);
                 if (value !== EMPTY) {
                     this.clearNotes(row, col);
+                    this.removePeerNotes(row, col, value);
                 }
                 if (className) {
                     cell.classList.add(className);
@@ -135,10 +155,12 @@ export class SudokuBoardView {
         const cell = this.cellAt(row, col);
         if (cell) {
             cell.value = String(value);
+            syncValueClass(cell);
             this.clearNotes(row, col);
             cell.classList.add("hint");
             cell.focus();
             this.updateConflicts();
+            this.removePeerNotes(row, col, value);
         }
     }
 
@@ -152,19 +174,48 @@ export class SudokuBoardView {
         });
     }
 
+    inputSelectedValue(value) {
+        const target = this.selectedCell();
+        if (!target || target.readOnly || this.paused || this.locked) {
+            return;
+        }
+
+        const row = Number(target.dataset.row);
+        const col = Number(target.dataset.col);
+        if (this.pencilMode) {
+            this.toggleNote(row, col, value);
+            target.focus();
+            return;
+        }
+
+        this.setCellValue(target, row, col, value, "value");
+    }
+
+    clearSelectedValue() {
+        const target = this.selectedCell();
+        if (!target || target.readOnly || this.paused || this.locked) {
+            return;
+        }
+
+        const row = Number(target.dataset.row);
+        const col = Number(target.dataset.col);
+        this.setCellValue(target, row, col, EMPTY, "clear");
+    }
+
     clearMarks() {
         this.cells().forEach(cell => {
             cell.classList.remove("hint", "invalid", "solved");
         });
     }
 
-    notifyChange() {
+    notifyChange(move = null) {
         this.clearMarks();
         const conflicts = this.updateConflicts();
         this.onChange({
             board: this.read(),
             conflicts,
-            complete: this.isComplete()
+            complete: this.isComplete(),
+            move
         });
     }
 
@@ -182,6 +233,17 @@ export class SudokuBoardView {
         if (paused && this.container.contains(document.activeElement)) {
             document.activeElement.blur();
         }
+    }
+
+    setLocked(locked) {
+        this.locked = locked;
+        this.container.classList.toggle("is-locked", locked);
+        this.cells().forEach(cell => {
+            if (!cell.classList.contains("given")) {
+                cell.readOnly = locked;
+            }
+            cell.tabIndex = locked ? -1 : 0;
+        });
     }
 
     toggleNote(row, col, value) {
@@ -222,6 +284,34 @@ export class SudokuBoardView {
         return conflicts;
     }
 
+    removePeerNotes(row, col, value) {
+        if (value === EMPTY) {
+            return;
+        }
+
+        for (let index = 0; index < SIZE; index++) {
+            this.removeNote(row, index, value);
+            this.removeNote(index, col, value);
+        }
+
+        const boxRow = Math.floor(row / 3) * 3;
+        const boxCol = Math.floor(col / 3) * 3;
+        for (let peerRow = boxRow; peerRow < boxRow + 3; peerRow++) {
+            for (let peerCol = boxCol; peerCol < boxCol + 3; peerCol++) {
+                this.removeNote(peerRow, peerCol, value);
+            }
+        }
+    }
+
+    removeNote(row, col, value) {
+        const noteSet = this.notes[row][col];
+        if (!noteSet.has(value)) {
+            return;
+        }
+        noteSet.delete(value);
+        renderNotes(this.notesAt(row, col), noteSet);
+    }
+
     clearConflicts() {
         this.cells().forEach(cell => {
             cell.classList.remove("conflict", "conflict-row", "conflict-column", "conflict-box");
@@ -244,6 +334,41 @@ export class SudokuBoardView {
 
     cells() {
         return Array.from(this.container.querySelectorAll(".cell"));
+    }
+
+    selectedCell() {
+        if (this.selected) {
+            const selected = this.cellAt(this.selected.row, this.selected.col);
+            if (selected) {
+                return selected;
+            }
+        }
+
+        const active = document.activeElement;
+        if (active instanceof HTMLInputElement && this.container.contains(active)) {
+            return active;
+        }
+
+        return this.cells().find(cell => !cell.readOnly) || null;
+    }
+
+    setCellValue(cell, row, col, value, source) {
+        const previous = toCellValue(cell.value);
+        cell.value = value === EMPTY ? "" : String(value);
+        syncValueClass(cell);
+        this.clearNotes(row, col);
+        if (value !== EMPTY) {
+            this.removePeerNotes(row, col, value);
+        }
+        cell.classList.remove("hint", "invalid", "solved");
+        cell.focus();
+        this.notifyChange({
+            row,
+            col,
+            previous,
+            value,
+            source
+        });
     }
 }
 
@@ -278,7 +403,12 @@ function normalizeCell(input) {
 
     const match = input.value.match(/[1-9]/);
     input.value = match ? match[0] : "";
+    syncValueClass(input);
     input.classList.remove("hint", "invalid", "solved");
+}
+
+function syncValueClass(input) {
+    input.classList.toggle("has-value", toCellValue(input.value) !== EMPTY);
 }
 
 function toCellValue(value) {
@@ -334,7 +464,7 @@ function addGroupConflicts(conflicts, type, cells) {
 }
 
 function handleCellKeyDown(event, boardView) {
-    if (boardView.paused) {
+    if (boardView.paused || boardView.locked) {
         event.preventDefault();
         return;
     }
@@ -353,10 +483,13 @@ function handleCellKeyDown(event, boardView) {
 
     if (event.key === "Backspace" || event.key === "Delete") {
         event.preventDefault();
-        cell.value = "";
-        boardView.clearNotes(Number(cell.dataset.row), Number(cell.dataset.col));
-        cell.classList.remove("hint", "invalid", "solved");
-        boardView.notifyChange();
+        boardView.setCellValue(
+            cell,
+            Number(cell.dataset.row),
+            Number(cell.dataset.col),
+            EMPTY,
+            "clear"
+        );
         return;
     }
 
@@ -368,10 +501,7 @@ function handleCellKeyDown(event, boardView) {
             boardView.toggleNote(row, col, Number(event.key));
             return;
         }
-        cell.value = event.key;
-        boardView.clearNotes(row, col);
-        cell.classList.remove("hint", "invalid", "solved");
-        boardView.notifyChange();
+        boardView.setCellValue(cell, row, col, Number(event.key), "value");
         return;
     }
 

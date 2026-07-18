@@ -1,69 +1,64 @@
-import { generatePuzzle, requestHint, solvePuzzle, validateBoard } from "./api.js";
+import { generatePuzzle, requestHint, validateBoard } from "./api.js";
 import { SudokuBoardView } from "./board.js";
 import { LoadingIndicator, ToastCenter } from "./feedback.js";
 import { Timer } from "./timer.js";
-import { SolverVisualizer } from "./visualizer.js";
 
 const boardView = new SudokuBoardView(document.getElementById("board"), onBoardChange);
 const timer = new Timer(document.getElementById("timerDisplay"));
-let visualizer;
 let completionValidationRequest = 0;
 let hasActivePuzzle = false;
 let gameCompleted = false;
 let hintCount = 0;
+let mistakeCount = 0;
 let gamePaused = false;
 let pencilMode = false;
+let moveHistory = [];
+const MAX_MISTAKES = 3;
 
 const elements = {
     difficulty: document.getElementById("difficulty"),
+    difficultyButtons: Array.from(document.querySelectorAll(".difficulty-tab")),
     generate: document.getElementById("generateBtn"),
-    solve: document.getElementById("solveBtn"),
     hint: document.getElementById("hintBtn"),
     pauseGame: document.getElementById("pauseGameBtn"),
     pencil: document.getElementById("pencilBtn"),
+    pencilState: document.getElementById("pencilState"),
+    undo: document.getElementById("undoBtn"),
     reset: document.getElementById("resetBtn"),
     clear: document.getElementById("clearBtn"),
-    playVisualizer: document.getElementById("playVizBtn"),
-    pauseVisualizer: document.getElementById("pauseVizBtn"),
-    resetVisualizer: document.getElementById("resetVizBtn"),
-    speed: document.getElementById("speedControl"),
-    stepProgress: document.getElementById("stepProgress"),
+    numberPad: document.getElementById("numberPad"),
     loadingOverlay: document.getElementById("loadingOverlay"),
     loadingText: document.getElementById("loadingText"),
     toastRegion: document.getElementById("toastRegion"),
     status: document.getElementById("statusText"),
     message: document.getElementById("messageText"),
-    visitedNodes: document.getElementById("visitedNodes"),
-    backtracks: document.getElementById("backtracks"),
-    maxDepth: document.getElementById("maxDepth"),
-    runtime: document.getElementById("runtime"),
+    mistakeCount: document.getElementById("mistakeCount"),
     hintCount: document.getElementById("hintCount")
 };
 
 const loading = new LoadingIndicator(elements.loadingOverlay, elements.loadingText);
 const toasts = new ToastCenter(elements.toastRegion);
-visualizer = new SolverVisualizer(boardView, updateVisualizerState);
-visualizer.setSpeed(elements.speed.value);
 
 elements.generate.addEventListener("click", onGenerate);
-elements.solve.addEventListener("click", onSolve);
 elements.hint.addEventListener("click", onHint);
 elements.pauseGame.addEventListener("click", onPauseGame);
 elements.pencil.addEventListener("click", onTogglePencil);
+elements.undo.addEventListener("click", onUndo);
 elements.reset.addEventListener("click", onReset);
-elements.clear.addEventListener("click", onClear);
-elements.playVisualizer.addEventListener("click", onPlayVisualization);
-elements.pauseVisualizer.addEventListener("click", onPauseVisualization);
-elements.resetVisualizer.addEventListener("click", onResetVisualization);
-elements.speed.addEventListener("input", () => visualizer.setSpeed(elements.speed.value));
+elements.clear.addEventListener("click", onClearSelected);
+elements.difficultyButtons.forEach(button => button.addEventListener("click", () => selectDifficulty(button)));
+elements.numberPad.addEventListener("click", onNumberPadClick);
+updateNumberCounts();
 
 async function onGenerate() {
     await run("Loading new game", async () => {
         invalidateCompletionValidation();
-        visualizer.clear();
         boardView.clear();
-        resetMetrics();
+        updateNumberCounts();
+        resetMistakes();
         resetHintCount();
+        resetHistory();
+        setPencilMode(false);
         setGamePaused(false);
         setGameCompleted(false);
         timer.reset();
@@ -71,46 +66,11 @@ async function onGenerate() {
 
         const response = await generatePuzzle(elements.difficulty.value);
         boardView.loadPuzzle(response.puzzle);
+        updateNumberCounts();
         hasActivePuzzle = true;
         timer.start();
         setMessage(`${response.difficulty} puzzle ready.`, "success");
     });
-}
-
-async function onSolve() {
-    await run("Solving", async () => {
-        const startBoard = boardView.read();
-        const response = await solvePuzzle(startBoard, true, "MRV");
-        updateMetrics(response.metrics);
-        if (!response.solved) {
-            setMessage("This board could not be solved.", "error");
-            return;
-        }
-
-        visualizer.load(response.steps, response.board, startBoard);
-        setGameCompleted(false);
-        setMessage("Solver steps loaded. Press Play to animate.", "success");
-    });
-}
-
-async function onPlayVisualization() {
-    const completed = await visualizer.play();
-    if (completed) {
-        timer.stop();
-        setGameCompleted(true);
-        setMessage("Solved.", "success");
-    }
-}
-
-function onPauseVisualization() {
-    visualizer.pause();
-    setMessage("Visualization paused.");
-}
-
-function onResetVisualization() {
-    visualizer.reset();
-    setGameCompleted(false);
-    setMessage("Visualization reset.");
 }
 
 async function onHint() {
@@ -123,6 +83,7 @@ async function onHint() {
             return;
         }
         boardView.markHint(response.row, response.col, response.value);
+        updateNumberCounts();
         incrementHintCount();
         setMessage(`${response.reason} Hint ${hintCount} used.`);
     });
@@ -134,14 +95,22 @@ async function onBoardChange(state) {
     }
 
     completionValidationRequest++;
+    updateNumberCounts(state.board);
 
     if (state.conflicts.length > 0) {
+        rememberMove(state.move);
+        recordMistake(state.move);
         setStatus("Check conflicts");
-        setMessage(formatConflictSummary(state.conflicts), "error");
+        if (mistakeCount >= MAX_MISTAKES) {
+            endGameAfterMistakes();
+            return;
+        }
+        setMessage(`${formatConflictSummary(state.conflicts)} Mistakes ${mistakeCount}/${MAX_MISTAKES}.`, "error");
         return;
     }
 
     setStatus("Ready");
+    rememberMove(state.move);
     if (!state.complete) {
         setMessage("No conflicts found.");
         return;
@@ -183,11 +152,11 @@ async function onBoardChange(state) {
 
 function onReset() {
     invalidateCompletionValidation();
-    visualizer.clear();
     setGamePaused(false);
     if (!hasActivePuzzle) {
         boardView.clear();
-        resetMetrics();
+        updateNumberCounts();
+        resetMistakes();
         timer.reset();
         setStatus("Ready");
         setMessage("No puzzle to reset.");
@@ -195,8 +164,11 @@ function onReset() {
     }
 
     boardView.reset();
-    resetMetrics();
+    updateNumberCounts();
+    resetMistakes();
     resetHintCount();
+    resetHistory();
+    setPencilMode(false);
     setGameCompleted(false);
     timer.reset();
     timer.start();
@@ -206,16 +178,54 @@ function onReset() {
 
 function onClear() {
     invalidateCompletionValidation();
-    visualizer.clear();
     setGamePaused(false);
     boardView.clear();
+    updateNumberCounts();
     hasActivePuzzle = false;
-    resetMetrics();
+    resetMistakes();
     resetHintCount();
+    resetHistory();
+    setPencilMode(false);
     setGameCompleted(false);
     timer.reset();
     setStatus("Ready");
     setMessage("Board cleared.");
+}
+
+function onClearSelected() {
+    boardView.clearSelectedValue();
+}
+
+function onUndo() {
+    const lastMove = moveHistory.pop();
+    if (!lastMove) {
+        setMessage("No move to undo.");
+        return;
+    }
+    const cell = boardView.cellAt(lastMove.row, lastMove.col);
+    if (!cell) {
+        return;
+    }
+    boardView.setCellValue(cell, lastMove.row, lastMove.col, lastMove.previous, "undo");
+    updateNumberCounts();
+    setMessage("Last move undone.");
+}
+
+function onNumberPadClick(event) {
+    const button = event.target.closest("button[data-value]");
+    if (!button) {
+        return;
+    }
+    boardView.inputSelectedValue(Number(button.dataset.value));
+}
+
+function selectDifficulty(button) {
+    elements.difficulty.value = button.dataset.difficulty;
+    elements.difficultyButtons.forEach(tab => {
+        const selected = tab === button;
+        tab.classList.toggle("active", selected);
+        tab.setAttribute("aria-pressed", String(selected));
+    });
 }
 
 function onPauseGame() {
@@ -226,11 +236,16 @@ function onPauseGame() {
 }
 
 function onTogglePencil() {
-    pencilMode = !pencilMode;
+    setPencilMode(!pencilMode);
+    setMessage(pencilMode ? "Pencil notes on." : "Pencil notes off.");
+}
+
+function setPencilMode(enabled) {
+    pencilMode = enabled;
     boardView.setPencilMode(pencilMode);
     elements.pencil.setAttribute("aria-pressed", String(pencilMode));
     elements.pencil.classList.toggle("active", pencilMode);
-    setMessage(pencilMode ? "Pencil mode enabled." : "Pencil mode disabled.");
+    elements.pencilState.textContent = pencilMode ? "On" : "Off";
 }
 
 function invalidateCompletionValidation() {
@@ -279,7 +294,6 @@ function setGamePaused(isPaused) {
     gamePaused = isPaused;
     boardView.setPaused(isPaused);
     if (isPaused) {
-        visualizer.pause();
         timer.pause();
         elements.pauseGame.textContent = "Resume Game";
         setStatus("Paused");
@@ -296,30 +310,59 @@ function setGamePaused(isPaused) {
 
 function updateControlAvailability(isBusy = false) {
     elements.hint.disabled = isBusy || gameCompleted || gamePaused;
-    elements.solve.disabled = isBusy || gamePaused;
     elements.pencil.disabled = isBusy || gameCompleted || gamePaused;
     elements.pauseGame.disabled = isBusy || !hasActivePuzzle || gameCompleted;
-    elements.playVisualizer.disabled = isBusy || !visualizer.hasSteps() || gameCompleted || gamePaused;
-    elements.pauseVisualizer.disabled = isBusy || !visualizer.hasSteps();
-    elements.resetVisualizer.disabled = isBusy || !visualizer.hasSteps() || gamePaused;
+    elements.undo.disabled = isBusy || gameCompleted || gamePaused || moveHistory.length === 0;
+    elements.clear.disabled = isBusy || gameCompleted || gamePaused;
+    elements.numberPad.querySelectorAll("button").forEach(button => {
+        button.disabled = isBusy || gameCompleted || gamePaused;
+    });
 }
 
-function updateMetrics(metrics) {
-    if (!metrics) {
-        resetMetrics();
+function updateNumberCounts(board = boardView.read()) {
+    const usedCounts = Array(10).fill(0);
+    board.flat().forEach(value => {
+        if (value >= 1 && value <= 9) {
+            usedCounts[value]++;
+        }
+    });
+
+    elements.numberPad.querySelectorAll("button[data-value]").forEach(button => {
+        const value = Number(button.dataset.value);
+        const remaining = Math.max(0, 9 - usedCounts[value]);
+        const count = button.querySelector(".remaining-count");
+        if (count) {
+            count.textContent = String(remaining);
+        }
+        button.classList.toggle("is-complete", remaining === 0);
+    });
+}
+
+function rememberMove(move) {
+    if (!move || move.source !== "value" || move.previous === move.value) {
+        updateControlAvailability(false);
         return;
     }
-    elements.visitedNodes.textContent = String(metrics.visitedNodes);
-    elements.backtracks.textContent = String(metrics.backtracks);
-    elements.maxDepth.textContent = String(metrics.maxRecursionDepth);
-    elements.runtime.textContent = formatNanos(metrics.elapsedNanos);
+    moveHistory.push(move);
+    updateControlAvailability(false);
 }
 
-function resetMetrics() {
-    elements.visitedNodes.textContent = "-";
-    elements.backtracks.textContent = "-";
-    elements.maxDepth.textContent = "-";
-    elements.runtime.textContent = "-";
+function resetHistory() {
+    moveHistory = [];
+    updateControlAvailability(false);
+}
+
+function recordMistake(move) {
+    if (!move || move.source !== "value" || move.value === 0) {
+        return;
+    }
+    mistakeCount = Math.min(MAX_MISTAKES, mistakeCount + 1);
+    elements.mistakeCount.textContent = `${mistakeCount}/${MAX_MISTAKES}`;
+}
+
+function resetMistakes() {
+    mistakeCount = 0;
+    elements.mistakeCount.textContent = `0/${MAX_MISTAKES}`;
 }
 
 function incrementHintCount() {
@@ -337,16 +380,9 @@ function setGameCompleted(isCompleted) {
     if (isCompleted) {
         setGamePaused(false);
     }
+    boardView.setLocked(isCompleted);
     elements.hint.disabled = isCompleted;
-    elements.playVisualizer.disabled = isCompleted || !visualizer.hasSteps();
     updateControlAvailability(false);
-}
-
-function formatNanos(nanos) {
-    if (typeof nanos !== "number") {
-        return "-";
-    }
-    return `${(nanos / 1_000_000).toFixed(2)} ms`;
 }
 
 function formatConflictSummary(conflicts) {
@@ -359,11 +395,9 @@ function formatConflictSummary(conflicts) {
         .join(", ") + " conflict(s) found.";
 }
 
-function updateVisualizerState(state) {
-    elements.stepProgress.textContent = state.loaded
-        ? `Step ${state.index} of ${state.total}`
-        : "No steps loaded.";
-    elements.playVisualizer.disabled = !state.loaded || state.playing || gameCompleted || gamePaused;
-    elements.pauseVisualizer.disabled = !state.loaded || !state.playing;
-    elements.resetVisualizer.disabled = !state.loaded || state.playing || gamePaused;
+function endGameAfterMistakes() {
+    timer.stop();
+    setGameCompleted(true);
+    setStatus("Game over");
+    setMessage(`Three mistakes used. Start a new game or reset this puzzle.`, "error");
 }

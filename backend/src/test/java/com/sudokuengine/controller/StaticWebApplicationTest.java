@@ -30,16 +30,17 @@ class StaticWebApplicationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Sudoku Engine")))
                 .andExpect(content().string(containsString("id=\"difficulty\"")))
-                .andExpect(content().string(containsString("New Game")))
+                .andExpect(content().string(containsString("difficulty-tab")))
+                .andExpect(content().string(containsString("Yeni Oyun")))
                 .andExpect(content().string(containsString("id=\"hintBtn\"")))
                 .andExpect(content().string(containsString("id=\"hintCount\"")))
+                .andExpect(content().string(containsString("id=\"mistakeCount\"")))
                 .andExpect(content().string(containsString("id=\"pauseGameBtn\"")))
                 .andExpect(content().string(containsString("id=\"pencilBtn\"")))
+                .andExpect(content().string(containsString("id=\"pencilState\"")))
+                .andExpect(content().string(containsString("id=\"numberPad\"")))
+                .andExpect(content().string(containsString("id=\"undoBtn\"")))
                 .andExpect(content().string(containsString("aria-pressed=\"false\"")))
-                .andExpect(content().string(containsString("id=\"playVizBtn\"")))
-                .andExpect(content().string(containsString("id=\"pauseVizBtn\"")))
-                .andExpect(content().string(containsString("id=\"resetVizBtn\"")))
-                .andExpect(content().string(containsString("id=\"speedControl\"")))
                 .andExpect(content().string(containsString("id=\"loadingOverlay\"")))
                 .andExpect(content().string(containsString("id=\"toastRegion\"")))
                 .andExpect(content().string(containsString("type=\"module\" src=\"/js/game.js\"")));
@@ -68,7 +69,8 @@ class StaticWebApplicationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Loading a new puzzle.")))
                 .andExpect(content().string(containsString("boardView.clear();")))
-                .andExpect(content().string(containsString("resetMetrics();")))
+                .andExpect(content().string(containsString("resetMistakes();")))
+                .andExpect(content().string(containsString("resetHistory();")))
                 .andExpect(content().string(containsString("timer.reset();")))
                 .andExpect(content().string(containsString("element.disabled = isBusy")))
                 .andExpect(content().string(containsString("dataset.state = state")));
@@ -146,33 +148,25 @@ class StaticWebApplicationTest {
     }
 
     @Test
-    void solverVisualizationSupportsPlaybackSpeedAndMetrics() throws Exception {
+    void gameplayCountersReplaceSolverControls() throws Exception {
+        mockMvc.perform(get("/index.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Hatalar")))
+                .andExpect(content().string(containsString("hintCount")));
+
         mockMvc.perform(get("/js/game.js"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("solvePuzzle(startBoard, true, \"MRV\")")))
-                .andExpect(content().string(containsString("visualizer.load(response.steps, response.board, startBoard)")))
-                .andExpect(content().string(containsString("elements.playVisualizer.addEventListener(\"click\", onPlayVisualization)")))
-                .andExpect(content().string(containsString("elements.pauseVisualizer.addEventListener(\"click\", onPauseVisualization)")))
-                .andExpect(content().string(containsString("elements.resetVisualizer.addEventListener(\"click\", onResetVisualization)")))
-                .andExpect(content().string(containsString("visualizer.setSpeed(elements.speed.value)")))
-                .andExpect(content().string(containsString("updateMetrics(response.metrics)")));
-
-        mockMvc.perform(get("/js/visualizer.js"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("scheduleNextStep()")))
-                .andExpect(content().string(containsString("this.applyNextStep();")))
-                .andExpect(content().string(containsString("this.index += 1;")))
-                .andExpect(content().string(containsString("pause()")))
-                .andExpect(content().string(containsString("resetBoardToStart()")))
-                .andExpect(content().string(containsString("this.boardView.write(this.startBoard);")))
-                .andExpect(content().string(containsString("visual-remove")))
-                .andExpect(content().string(containsString("visual-place")));
+                .andExpect(content().string(containsString("const MAX_MISTAKES = 3;")))
+                .andExpect(content().string(containsString("recordMistake(state.move);")))
+                .andExpect(content().string(containsString("endGameAfterMistakes();")))
+                .andExpect(content().string(containsString("onNumberPadClick")))
+                .andExpect(content().string(containsString("selectDifficulty(button)")))
+                .andExpect(content().string(containsString("elements.mistakeCount.textContent = `0/${MAX_MISTAKES}`;")));
 
         mockMvc.perform(get("/css/app.css"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString(".cell.visual-place")))
-                .andExpect(content().string(containsString(".cell.visual-remove")))
-                .andExpect(content().string(containsString(".visualizer-controls")));
+                .andExpect(content().string(containsString(".sudoku-board.is-locked")))
+                .andExpect(content().string(containsString(".round-tool")));
     }
 
     @Test
@@ -194,7 +188,6 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("async function onBoardChange(state)")))
                 .andExpect(content().string(containsString("function onPauseGame()")))
                 .andExpect(content().string(containsString("function onTogglePencil()")))
-                .andExpect(content().string(containsString("visualizer.pause();")))
                 .andExpect(content().string(containsString("timer.pause();")))
                 .andExpect(content().string(containsString("timer.resume();")));
 
@@ -237,7 +230,7 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString(".toast-region")))
                 .andExpect(content().string(containsString(".toast[data-state=\"success\"]")))
                 .andExpect(content().string(containsString(".toast[data-state=\"error\"]")))
-                .andExpect(content().string(containsString("@media (max-width: 480px)")));
+                .andExpect(content().string(containsString("@media (max-width: 560px)")));
     }
 
     private void assertStaticFile(String path) throws Exception {
