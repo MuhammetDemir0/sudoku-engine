@@ -33,6 +33,9 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("New Game")))
                 .andExpect(content().string(containsString("id=\"hintBtn\"")))
                 .andExpect(content().string(containsString("id=\"hintCount\"")))
+                .andExpect(content().string(containsString("id=\"pauseGameBtn\"")))
+                .andExpect(content().string(containsString("id=\"pencilBtn\"")))
+                .andExpect(content().string(containsString("aria-pressed=\"false\"")))
                 .andExpect(content().string(containsString("id=\"playVizBtn\"")))
                 .andExpect(content().string(containsString("id=\"pauseVizBtn\"")))
                 .andExpect(content().string(containsString("id=\"resetVizBtn\"")))
@@ -138,7 +141,7 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("let hintCount = 0;")))
                 .andExpect(content().string(containsString("incrementHintCount();")))
                 .andExpect(content().string(containsString("elements.hintCount.textContent = String(hintCount);")))
-                .andExpect(content().string(containsString("elements.hint.disabled = isBusy || gameCompleted;")))
+                .andExpect(content().string(containsString("elements.hint.disabled = isBusy || gameCompleted || gamePaused;")))
                 .andExpect(content().string(containsString("setGameCompleted(true);")));
     }
 
@@ -170,6 +173,38 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString(".cell.visual-place")))
                 .andExpect(content().string(containsString(".cell.visual-remove")))
                 .andExpect(content().string(containsString(".visualizer-controls")));
+    }
+
+    @Test
+    void gameplayControlsSupportPauseAndPencilNotes() throws Exception {
+        mockMvc.perform(get("/js/timer.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("pause()")))
+                .andExpect(content().string(containsString("resume()")))
+                .andExpect(content().string(containsString("isRunning()")));
+
+        mockMvc.perform(get("/js/board.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("setPencilMode(enabled)")))
+                .andExpect(content().string(containsString("toggleNote(row, col, value)")))
+                .andExpect(content().string(containsString("input.value = \"\";")));
+
+        mockMvc.perform(get("/js/game.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("async function onBoardChange(state)")))
+                .andExpect(content().string(containsString("function onPauseGame()")))
+                .andExpect(content().string(containsString("function onTogglePencil()")))
+                .andExpect(content().string(containsString("visualizer.pause();")))
+                .andExpect(content().string(containsString("timer.pause();")))
+                .andExpect(content().string(containsString("timer.resume();")));
+
+        mockMvc.perform(get("/css/app.css"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("caret-color: transparent")))
+                .andExpect(content().string(containsString(".cell.selected")))
+                .andExpect(content().string(containsString(".notes")))
+                .andExpect(content().string(containsString(".sudoku-board.is-paused")))
+                .andExpect(content().string(containsString("filter: blur(6px)")));
     }
 
     @Test
