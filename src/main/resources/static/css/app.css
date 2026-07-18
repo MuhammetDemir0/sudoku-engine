@@ -275,6 +275,21 @@ button:disabled {
     margin: 0;
 }
 
+.message-panel p[data-state="loading"] {
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.message-panel p[data-state="success"] {
+    color: var(--success);
+    font-weight: 700;
+}
+
+.message-panel p[data-state="error"] {
+    color: var(--danger);
+    font-weight: 700;
+}
+
 @media (max-width: 820px) {
     .app-shell {
         padding: 14px;

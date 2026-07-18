@@ -1,14 +1,19 @@
 const API_ROOT = "/api/v1/puzzles";
 
 async function postJson(path, payload) {
-    const response = await fetch(`${API_ROOT}${path}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        },
-        body: JSON.stringify(payload)
-    });
+    let response;
+    try {
+        response = await fetch(`${API_ROOT}${path}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+    } catch (error) {
+        throw new Error("Unable to reach the Sudoku API. Please try again.");
+    }
 
     if (response.status === 204) {
         return null;

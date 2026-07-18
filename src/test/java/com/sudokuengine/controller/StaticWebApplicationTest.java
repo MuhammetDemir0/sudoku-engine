@@ -29,6 +29,8 @@ class StaticWebApplicationTest {
         mockMvc.perform(get("/index.html"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Sudoku Engine")))
+                .andExpect(content().string(containsString("id=\"difficulty\"")))
+                .andExpect(content().string(containsString("New Game")))
                 .andExpect(content().string(containsString("type=\"module\" src=\"/js/game.js\"")));
     }
 
@@ -40,6 +42,24 @@ class StaticWebApplicationTest {
         assertStaticFile("/js/game.js");
         assertStaticFile("/js/timer.js");
         assertStaticFile("/js/visualizer.js");
+    }
+
+    @Test
+    void newGameFrontendCallsGenerateApiAndHandlesUserStates() throws Exception {
+        mockMvc.perform(get("/js/api.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("fetch(`${API_ROOT}${path}`")))
+                .andExpect(content().string(containsString("postJson(\"/generate\", { difficulty })")))
+                .andExpect(content().string(containsString("Unable to reach the Sudoku API")));
+
+        mockMvc.perform(get("/js/game.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Loading a new puzzle.")))
+                .andExpect(content().string(containsString("boardView.clear();")))
+                .andExpect(content().string(containsString("resetMetrics();")))
+                .andExpect(content().string(containsString("timer.reset();")))
+                .andExpect(content().string(containsString("element.disabled = isBusy")))
+                .andExpect(content().string(containsString("dataset.state = state")));
     }
 
     private void assertStaticFile(String path) throws Exception {
