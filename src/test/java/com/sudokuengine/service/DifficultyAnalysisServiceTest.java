@@ -1,10 +1,14 @@
 package com.sudokuengine.service;
 
+import com.sudokuengine.config.DifficultyThresholdConfig;
 import com.sudokuengine.exception.InvalidBoardException;
+import com.sudokuengine.exception.UnsolvablePuzzleException;
 import com.sudokuengine.model.Difficulty;
 import com.sudokuengine.model.SolveResult;
 import com.sudokuengine.model.SudokuBoard;
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -47,6 +51,32 @@ class DifficultyAnalysisServiceTest {
         assertThrows(InvalidBoardException.class, () -> service.calculate(null));
     }
 
+    @Test
+    void rejectsUnsolvablePuzzle() {
+        DifficultyAnalysisService service = new DifficultyAnalysisService(new UnsolvedStubSolver());
+
+        assertThrows(UnsolvablePuzzleException.class, () -> service.calculate(puzzleWithClues(20)));
+    }
+
+    @Test
+    void rejectsNullConstructorDependencies() {
+        assertThrows(NullPointerException.class, () -> new DifficultyAnalysisService(null));
+        assertThrows(NullPointerException.class,
+                () -> new DifficultyAnalysisService(
+                        new StubSolver(new SolveResult.Metrics(0, 0, 0, 0)),
+                        null));
+    }
+
+    @Test
+    void rejectsInvalidThresholdConfiguration() {
+        assertThrows(NullPointerException.class, () -> new DifficultyThresholdConfig(null));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DifficultyThresholdConfig(Map.of(
+                        Difficulty.EASY, new DifficultyThresholdConfig.Thresholds(36, 45, 80, 0, 45))));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DifficultyThresholdConfig.Thresholds(40, 39, 80, 0, 45));
+    }
+
     private static SudokuBoard puzzleWithClues(int clues) {
         int[][] cells = new int[SudokuBoard.SIZE][SudokuBoard.SIZE];
         for (int index = 0; index < clues; index++) {
@@ -65,6 +95,13 @@ class DifficultyAnalysisServiceTest {
         @Override
         public SolveResult solveInternal(SudokuBoard workingBoard) {
             return SolveResult.solved(workingBoard, metrics);
+        }
+    }
+
+    private static final class UnsolvedStubSolver implements SudokuSolver {
+        @Override
+        public SolveResult solveInternal(SudokuBoard workingBoard) {
+            return SolveResult.unsolved(new SolveResult.Metrics(3, 1, 2, 0));
         }
     }
 }

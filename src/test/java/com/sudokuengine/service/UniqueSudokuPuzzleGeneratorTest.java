@@ -73,6 +73,26 @@ class UniqueSudokuPuzzleGeneratorTest {
     }
 
     @Test
+    void fixedSeedsProduceRepeatablePuzzleAndSolution() {
+        UniqueSudokuPuzzleGenerator generatorA = new UniqueSudokuPuzzleGenerator(
+                new SudokuSolutionGenerator(new Random(11L)),
+                new BacktrackingSudokuSolver(),
+                new Random(11L),
+                200);
+        UniqueSudokuPuzzleGenerator generatorB = new UniqueSudokuPuzzleGenerator(
+                new SudokuSolutionGenerator(new Random(11L)),
+                new BacktrackingSudokuSolver(),
+                new Random(11L),
+                200);
+
+        SudokuPuzzle puzzleA = generatorA.generate();
+        SudokuPuzzle puzzleB = generatorB.generate();
+
+        assertArrayEquals(puzzleA.getPuzzle().toMatrix(), puzzleB.getPuzzle().toMatrix());
+        assertArrayEquals(puzzleA.getSolution().toMatrix(), puzzleB.getSolution().toMatrix());
+    }
+
+    @Test
     void maxAttemptFailureIsMeaningfulAndFinite() {
         BacktrackingSudokuSolver alwaysNonUniqueSolver = new BacktrackingSudokuSolver() {
             @Override
@@ -91,6 +111,57 @@ class UniqueSudokuPuzzleGeneratorTest {
                 Duration.ofSeconds(1),
                 () -> assertThrows(PuzzleGenerationException.class, generator::generate));
         assertTrue(ex.getMessage().contains("max attempts") || ex.getMessage().contains("exactly one solution"));
+    }
+
+    @Test
+    void rejectsInvalidConstructorArguments() {
+        SudokuSolutionGenerator solutionGenerator = new SudokuSolutionGenerator(new Random(1L));
+        BacktrackingSudokuSolver backtrackingSolver = new BacktrackingSudokuSolver();
+        DifficultyAnalysisService difficultyAnalysisService = new DifficultyAnalysisService();
+        DifficultyThresholdConfig thresholdConfig = DifficultyThresholdConfig.defaults();
+        Random random = new Random(1L);
+
+        assertThrows(NullPointerException.class,
+                () -> new UniqueSudokuPuzzleGenerator(null, backtrackingSolver, random, 200));
+        assertThrows(NullPointerException.class,
+                () -> new UniqueSudokuPuzzleGenerator(solutionGenerator, null, random, 200));
+        assertThrows(NullPointerException.class,
+                () -> new UniqueSudokuPuzzleGenerator(
+                        solutionGenerator,
+                        backtrackingSolver,
+                        difficultyAnalysisService,
+                        thresholdConfig,
+                        null,
+                        200));
+        assertThrows(NullPointerException.class,
+                () -> new UniqueSudokuPuzzleGenerator(
+                        solutionGenerator,
+                        backtrackingSolver,
+                        null,
+                        thresholdConfig,
+                        random,
+                        200));
+        assertThrows(NullPointerException.class,
+                () -> new UniqueSudokuPuzzleGenerator(
+                        solutionGenerator,
+                        backtrackingSolver,
+                        difficultyAnalysisService,
+                        null,
+                        random,
+                        200));
+        assertThrows(IllegalArgumentException.class,
+                () -> new UniqueSudokuPuzzleGenerator(solutionGenerator, backtrackingSolver, random, 0));
+    }
+
+    @Test
+    void rejectsNullDifficultyRequest() {
+        UniqueSudokuPuzzleGenerator generator = new UniqueSudokuPuzzleGenerator(
+                new SudokuSolutionGenerator(new Random(3L)),
+                new BacktrackingSudokuSolver(),
+                new Random(3L),
+                200);
+
+        assertThrows(NullPointerException.class, () -> generator.generate(null));
     }
 
     private static boolean hasEmptyCells(SudokuBoard board) {

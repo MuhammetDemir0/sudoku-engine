@@ -1,6 +1,7 @@
 package com.sudokuengine.service;
 
 import com.sudokuengine.model.Hint;
+import com.sudokuengine.model.SolveResult;
 import com.sudokuengine.model.SudokuBoard;
 import org.junit.jupiter.api.Test;
 
@@ -8,6 +9,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HintServiceTest {
@@ -63,6 +65,19 @@ class HintServiceTest {
         assertArrayEquals(snapshot, puzzle.toMatrix());
     }
 
+    @Test
+    void noHintIsReturnedWhenSolverCannotSolveValidBoard() {
+        HintService service = new HintService(new SudokuValidator(), new UnsolvedStubSolver());
+
+        assertTrue(service.findHint(puzzle()).isEmpty());
+    }
+
+    @Test
+    void rejectsNullDependencies() {
+        assertThrows(NullPointerException.class, () -> new HintService(null, solver));
+        assertThrows(NullPointerException.class, () -> new HintService(new SudokuValidator(), null));
+    }
+
     private static SudokuBoard puzzle() {
         return new SudokuBoard(new int[][] {
                 { 5, 3, 0, 0, 7, 0, 0, 0, 0 },
@@ -89,5 +104,12 @@ class HintServiceTest {
                 { 2, 8, 7, 4, 1, 9, 6, 3, 5 },
                 { 3, 4, 5, 2, 8, 6, 1, 7, 9 }
         });
+    }
+
+    private static final class UnsolvedStubSolver implements SudokuSolver {
+        @Override
+        public SolveResult solveInternal(SudokuBoard workingBoard) {
+            return SolveResult.unsolved(new SolveResult.Metrics(5, 2, 3, 0));
+        }
     }
 }
