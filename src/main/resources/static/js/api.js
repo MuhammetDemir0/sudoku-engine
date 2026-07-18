@@ -21,10 +21,20 @@ async function postJson(path, payload) {
 
     const body = await response.json().catch(() => ({}));
     if (!response.ok) {
-        const message = body.message || `Request failed with HTTP ${response.status}.`;
+        const message = body.message || friendlyHttpMessage(response.status);
         throw new Error(message);
     }
     return body;
+}
+
+function friendlyHttpMessage(status) {
+    if (status === 400) {
+        return "Please check the board and try again.";
+    }
+    if (status === 422) {
+        return "This puzzle cannot be completed from the current board.";
+    }
+    return "Something went wrong. Please try again.";
 }
 
 export function generatePuzzle(difficulty) {

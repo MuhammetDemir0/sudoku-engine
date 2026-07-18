@@ -37,6 +37,8 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("id=\"pauseVizBtn\"")))
                 .andExpect(content().string(containsString("id=\"resetVizBtn\"")))
                 .andExpect(content().string(containsString("id=\"speedControl\"")))
+                .andExpect(content().string(containsString("id=\"loadingOverlay\"")))
+                .andExpect(content().string(containsString("id=\"toastRegion\"")))
                 .andExpect(content().string(containsString("type=\"module\" src=\"/js/game.js\"")));
     }
 
@@ -45,6 +47,7 @@ class StaticWebApplicationTest {
         assertStaticFile("/css/app.css");
         assertStaticFile("/js/api.js");
         assertStaticFile("/js/board.js");
+        assertStaticFile("/js/feedback.js");
         assertStaticFile("/js/game.js");
         assertStaticFile("/js/timer.js");
         assertStaticFile("/js/visualizer.js");
@@ -167,6 +170,39 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString(".cell.visual-place")))
                 .andExpect(content().string(containsString(".cell.visual-remove")))
                 .andExpect(content().string(containsString(".visualizer-controls")));
+    }
+
+    @Test
+    void feedbackComponentsProvideLoadingToastsAndMobileStyles() throws Exception {
+        mockMvc.perform(get("/js/feedback.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("export class LoadingIndicator")))
+                .andExpect(content().string(containsString("show(message)")))
+                .andExpect(content().string(containsString("hide()")))
+                .andExpect(content().string(containsString("export class ToastCenter")))
+                .andExpect(content().string(containsString("toast.dataset.state = state")));
+
+        mockMvc.perform(get("/js/game.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("new LoadingIndicator(elements.loadingOverlay, elements.loadingText)")))
+                .andExpect(content().string(containsString("new ToastCenter(elements.toastRegion)")))
+                .andExpect(content().string(containsString("loading.show(status)")))
+                .andExpect(content().string(containsString("loading.hide()")))
+                .andExpect(content().string(containsString("toasts.show(value, state)")));
+
+        mockMvc.perform(get("/js/api.js"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("friendlyHttpMessage")))
+                .andExpect(content().string(containsString("Something went wrong. Please try again.")));
+
+        mockMvc.perform(get("/css/app.css"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(".loading-overlay")))
+                .andExpect(content().string(containsString(".loading-spinner")))
+                .andExpect(content().string(containsString(".toast-region")))
+                .andExpect(content().string(containsString(".toast[data-state=\"success\"]")))
+                .andExpect(content().string(containsString(".toast[data-state=\"error\"]")))
+                .andExpect(content().string(containsString("@media (max-width: 480px)")));
     }
 
     private void assertStaticFile(String path) throws Exception {

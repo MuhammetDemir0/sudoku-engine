@@ -1,5 +1,6 @@
 import { generatePuzzle, requestHint, solvePuzzle, validateBoard } from "./api.js";
 import { SudokuBoardView } from "./board.js";
+import { LoadingIndicator, ToastCenter } from "./feedback.js";
 import { Timer } from "./timer.js";
 import { SolverVisualizer } from "./visualizer.js";
 
@@ -24,6 +25,9 @@ const elements = {
     resetVisualizer: document.getElementById("resetVizBtn"),
     speed: document.getElementById("speedControl"),
     stepProgress: document.getElementById("stepProgress"),
+    loadingOverlay: document.getElementById("loadingOverlay"),
+    loadingText: document.getElementById("loadingText"),
+    toastRegion: document.getElementById("toastRegion"),
     status: document.getElementById("statusText"),
     message: document.getElementById("messageText"),
     visitedNodes: document.getElementById("visitedNodes"),
@@ -33,6 +37,8 @@ const elements = {
     hintCount: document.getElementById("hintCount")
 };
 
+const loading = new LoadingIndicator(elements.loadingOverlay, elements.loadingText);
+const toasts = new ToastCenter(elements.toastRegion);
 visualizer = new SolverVisualizer(boardView, updateVisualizerState);
 visualizer.setSpeed(elements.speed.value);
 
@@ -152,6 +158,7 @@ async function onBoardChange(state) {
     const requestId = completionValidationRequest;
     setStatus("Verifying");
     setMessage("Board is complete. Verifying with the server.", "loading");
+    loading.show("Verifying board");
 
     try {
         const response = await validateBoard(state.board);
@@ -174,6 +181,10 @@ async function onBoardChange(state) {
         if (requestId === completionValidationRequest) {
             setStatus("Error");
             setMessage(error.message, "error");
+        }
+    } finally {
+        if (requestId === completionValidationRequest) {
+            loading.hide();
         }
     }
 }
@@ -220,6 +231,7 @@ function invalidateCompletionValidation() {
 async function run(status, action) {
     setBusy(true);
     setStatus(status);
+    loading.show(status);
     boardView.clearMarks();
     try {
         await action();
@@ -228,6 +240,7 @@ async function run(status, action) {
         setStatus("Error");
         setMessage(error.message, "error");
     } finally {
+        loading.hide();
         setBusy(false);
     }
 }
@@ -251,6 +264,9 @@ function setStatus(value) {
 function setMessage(value, state = "info") {
     elements.message.textContent = value;
     elements.message.dataset.state = state;
+    if (state === "error" || state === "success") {
+        toasts.show(value, state);
+    }
 }
 
 function updateMetrics(metrics) {
