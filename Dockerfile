@@ -20,12 +20,13 @@ WORKDIR /app
 COPY --from=build /workspace/backend/target/sudoku-engine-1.0.0.jar /app/sudoku-engine.jar
 
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
+ENV SPRING_PROFILES_ACTIVE=production
 
 EXPOSE 8080
 
 USER sudoku:sudoku
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD curl -fsS http://localhost:8080/actuator/health | grep -q '"status":"UP"'
+    CMD curl -fsS "http://localhost:${PORT:-8080}/actuator/health" | grep -q '"status":"UP"'
 
 ENTRYPOINT ["java", "-jar", "/app/sudoku-engine.jar"]
