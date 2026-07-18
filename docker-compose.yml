@@ -1,9 +1,26 @@
-version: '3.8'
-
 services:
+  sudoku-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sudoku-engine:local
+    container_name: sudoku-engine-local
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'" ]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    networks:
+      - sudoku-network
+
   postgresql:
     image: postgres:16-alpine
     container_name: sudoku-engine-postgres
+    profiles:
+      - database
     environment:
       POSTGRES_DB: sudoku_db
       POSTGRES_USER: sudoku_user
@@ -25,6 +42,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: sudoku-engine-pgadmin
+    profiles:
+      - database
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@sudokuengine.local
       PGADMIN_DEFAULT_PASSWORD: admin
