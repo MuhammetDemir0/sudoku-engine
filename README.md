@@ -107,7 +107,8 @@ same runtime.
 More detail on difficulty thresholds is available in
 [docs/difficulty.md](docs/difficulty.md). Deeper design notes are split across
 [docs/architecture.md](docs/architecture.md), [docs/solver.md](docs/solver.md),
-[docs/generator.md](docs/generator.md), and [docs/api.md](docs/api.md).
+[docs/generator.md](docs/generator.md), and [docs/api.md](docs/api.md). Solver
+performance measurements are documented in [docs/benchmark.md](docs/benchmark.md).
 
 ## Setup
 
