@@ -69,6 +69,15 @@ docker build -t sudoku-engine:local .
 
 The CI pipeline runs compile, tests, verification, packaging, and Docker build checks on every push and pull request.
 
+## Deployment
+
+Live deployment is configured for Render with `render.yaml`. The Docker image
+uses the `production` profile by default, reads the hosting port from `PORT`,
+and exposes `/actuator/health` for platform health checks.
+
+See `docs/deployment.md` for the deployment steps and the GitHub repository
+Website update command.
+
 ## API
 
 Main endpoints are available under `/api/v1/puzzles`:
