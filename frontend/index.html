@@ -10,79 +10,64 @@
 <body>
     <div class="app-shell">
         <header class="topbar">
-            <div>
-                <h1>Sudoku Engine</h1>
-                <p id="statusText" class="status-text" aria-live="polite">Ready</p>
+            <div class="difficulty-tabs" aria-label="Difficulty">
+                <span>Zorluk:</span>
+                <button class="difficulty-tab" type="button" data-difficulty="EASY" aria-pressed="false">Kolay</button>
+                <button class="difficulty-tab active" type="button" data-difficulty="MEDIUM" aria-pressed="true">Orta</button>
+                <button class="difficulty-tab" type="button" data-difficulty="HARD" aria-pressed="false">Zor</button>
+                <button class="difficulty-tab" type="button" data-difficulty="EXPERT" aria-pressed="false">Uzman</button>
             </div>
-            <div class="timer" aria-label="Elapsed time">
-                <span id="timerDisplay">00:00</span>
-            </div>
+            <input id="difficulty" type="hidden" value="MEDIUM">
+            <p id="statusText" class="status-text" aria-live="polite">Ready</p>
         </header>
 
         <main class="workspace">
             <section class="board-panel" aria-label="Sudoku board">
                 <div id="board" class="sudoku-board"></div>
+                <div id="numberPad" class="number-pad" aria-label="Number pad">
+                    <button type="button" data-value="1"><span class="remaining-count">9</span><span class="pad-value">1</span></button>
+                    <button type="button" data-value="2"><span class="remaining-count">9</span><span class="pad-value">2</span></button>
+                    <button type="button" data-value="3"><span class="remaining-count">9</span><span class="pad-value">3</span></button>
+                    <button type="button" data-value="4"><span class="remaining-count">9</span><span class="pad-value">4</span></button>
+                    <button type="button" data-value="5"><span class="remaining-count">9</span><span class="pad-value">5</span></button>
+                    <button type="button" data-value="6"><span class="remaining-count">9</span><span class="pad-value">6</span></button>
+                    <button type="button" data-value="7"><span class="remaining-count">9</span><span class="pad-value">7</span></button>
+                    <button type="button" data-value="8"><span class="remaining-count">9</span><span class="pad-value">8</span></button>
+                    <button type="button" data-value="9"><span class="remaining-count">9</span><span class="pad-value">9</span></button>
+                </div>
             </section>
 
             <aside class="side-panel" aria-label="Puzzle controls">
-                <div class="control-row">
-                    <label for="difficulty">Difficulty</label>
-                    <select id="difficulty">
-                        <option value="EASY">Easy</option>
-                        <option value="MEDIUM" selected>Medium</option>
-                        <option value="HARD">Hard</option>
-                        <option value="EXPERT">Expert</option>
-                    </select>
-                </div>
-
-                <div class="button-grid">
-                    <button id="generateBtn" type="button">New Game</button>
-                    <button id="solveBtn" type="button">Solve</button>
-                    <button id="hintBtn" type="button">Hint</button>
-                    <button id="pauseGameBtn" type="button">Pause Game</button>
-                    <button id="pencilBtn" type="button" aria-pressed="false">Pencil</button>
-                    <button id="resetBtn" type="button">Reset</button>
-                    <button id="clearBtn" type="button">Clear</button>
-                </div>
-
-                <section class="visualizer-controls" aria-label="Algorithm visualization controls">
-                    <div class="button-grid">
-                        <button id="playVizBtn" type="button" disabled>Play</button>
-                        <button id="pauseVizBtn" type="button" disabled>Pause</button>
-                        <button id="resetVizBtn" type="button" disabled>Reset Steps</button>
+                <div class="game-stats">
+                    <div>
+                        <span>Hatalar</span>
+                        <strong id="mistakeCount">0/3</strong>
                     </div>
-                    <label for="speedControl">Speed</label>
-                    <input id="speedControl" type="range" min="1" max="5" value="3">
-                    <p id="stepProgress">No steps loaded.</p>
-                </section>
+                    <div>
+                        <span>S&#252;re</span>
+                        <strong id="timerDisplay">00:00</strong>
+                    </div>
+                </div>
 
-                <section class="metrics" aria-label="Solver metrics">
-                    <dl>
-                        <div>
-                            <dt>Visited</dt>
-                            <dd id="visitedNodes">-</dd>
-                        </div>
-                        <div>
-                            <dt>Backtracks</dt>
-                            <dd id="backtracks">-</dd>
-                        </div>
-                        <div>
-                            <dt>Depth</dt>
-                            <dd id="maxDepth">-</dd>
-                        </div>
-                        <div>
-                            <dt>Runtime</dt>
-                            <dd id="runtime">-</dd>
-                        </div>
-                        <div>
-                            <dt>Hints</dt>
-                            <dd id="hintCount">0</dd>
-                        </div>
-                    </dl>
-                </section>
+                <div class="tool-row">
+                    <button id="undoBtn" class="round-tool" type="button" aria-label="Undo last move">&#8630;</button>
+                    <button id="clearBtn" class="round-tool" type="button" aria-label="Clear selected cell">&#9003;</button>
+                    <button id="pencilBtn" class="round-tool pencil-tool" type="button" aria-label="Toggle pencil notes" aria-pressed="false">
+                        <span class="pencil-glyph" aria-hidden="true">&#9998;</span>
+                        <span id="pencilState" class="tool-state">Off</span>
+                    </button>
+                    <button id="hintBtn" class="round-tool hint-tool" type="button" aria-label="Get a hint">
+                        <span aria-hidden="true">&#9906;</span>
+                        <span id="hintCount" class="hint-badge">0</span>
+                    </button>
+                    <button id="pauseGameBtn" class="round-tool" type="button" aria-label="Pause game">&#10074;&#10074;</button>
+                </div>
+
+                <button id="generateBtn" class="primary-action" type="button">Yeni Oyun</button>
+                <button id="resetBtn" class="secondary-action" type="button">Ba&#351;tan Ba&#351;la</button>
 
                 <section class="message-panel" aria-label="Current message">
-                    <p id="messageText">Create a puzzle or enter a board.</p>
+                    <p id="messageText">Yeni oyun ba&#351;lat veya tahtaya say&#305; gir.</p>
                 </section>
             </aside>
         </main>
