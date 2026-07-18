@@ -43,6 +43,17 @@
                     <button id="clearBtn" type="button">Clear</button>
                 </div>
 
+                <section class="visualizer-controls" aria-label="Algorithm visualization controls">
+                    <div class="button-grid">
+                        <button id="playVizBtn" type="button" disabled>Play</button>
+                        <button id="pauseVizBtn" type="button" disabled>Pause</button>
+                        <button id="resetVizBtn" type="button" disabled>Reset Steps</button>
+                    </div>
+                    <label for="speedControl">Speed</label>
+                    <input id="speedControl" type="range" min="1" max="5" value="3">
+                    <p id="stepProgress">No steps loaded.</p>
+                </section>
+
                 <section class="metrics" aria-label="Solver metrics">
                     <dl>
                         <div>
