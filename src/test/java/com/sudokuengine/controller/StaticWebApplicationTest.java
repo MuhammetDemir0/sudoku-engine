@@ -1,0 +1,49 @@
+package com.sudokuengine.controller;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@SuppressWarnings("null")
+class StaticWebApplicationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    void indexIsServedFromSpringBootStaticResources() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("index.html"));
+
+        mockMvc.perform(get("/index.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Sudoku Engine")))
+                .andExpect(content().string(containsString("type=\"module\" src=\"/js/game.js\"")));
+    }
+
+    @Test
+    void staticAssetsAreServedWithoutFrontendServer() throws Exception {
+        assertStaticFile("/css/app.css");
+        assertStaticFile("/js/api.js");
+        assertStaticFile("/js/board.js");
+        assertStaticFile("/js/game.js");
+        assertStaticFile("/js/timer.js");
+        assertStaticFile("/js/visualizer.js");
+    }
+
+    private void assertStaticFile(String path) throws Exception {
+        mockMvc.perform(get(path))
+                .andExpect(status().isOk());
+    }
+}
