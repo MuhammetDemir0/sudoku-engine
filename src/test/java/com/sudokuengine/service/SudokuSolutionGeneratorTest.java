@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SudokuSolutionGeneratorTest {
@@ -42,6 +43,11 @@ class SudokuSolutionGeneratorTest {
             assertTrue(validator.isValid(board));
             assertTrue(isCompletelyFilled(board));
         }
+    }
+
+    @Test
+    void rejectsNullRandomDependency() {
+        assertThrows(NullPointerException.class, () -> new SudokuSolutionGenerator(null));
     }
 
     private static boolean isCompletelyFilled(SudokuBoard board) {
