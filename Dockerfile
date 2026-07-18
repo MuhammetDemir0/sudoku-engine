@@ -20,7 +20,7 @@ WORKDIR /app
 COPY --from=build /workspace/backend/target/sudoku-engine-1.0.0.jar /app/sudoku-engine.jar
 
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
-ENV SPRING_PROFILES_ACTIVE=production
+ENV SPRING_PROFILES_ACTIVE=prod
 
 EXPOSE 8080
 

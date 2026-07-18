@@ -6,10 +6,12 @@ services:
     image: sudoku-engine:local
     container_name: sudoku-engine-local
     environment:
-      PORT: 8080
-      SPRING_PROFILES_ACTIVE: production
+      PORT: ${PORT:-8080}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      LOG_LEVEL_ROOT: ${LOG_LEVEL_ROOT:-INFO}
+      LOG_LEVEL_APP: ${LOG_LEVEL_APP:-INFO}
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:${PORT:-8080}"
     healthcheck:
       test: [ "CMD-SHELL", "curl -fsS http://localhost:$${PORT:-8080}/actuator/health | grep -q '\"status\":\"UP\"'" ]
       interval: 30s
@@ -26,8 +28,8 @@ services:
       - database
     environment:
       POSTGRES_DB: sudoku_db
-      POSTGRES_USER: sudoku_user
-      POSTGRES_PASSWORD: sudoku_password
+      POSTGRES_USER: ${POSTGRES_USER:-sudoku_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD before starting the database profile}
     ports:
       - "5432:5432"
     volumes:
@@ -49,7 +51,7 @@ services:
       - database
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@sudokuengine.local
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?Set PGADMIN_DEFAULT_PASSWORD before starting the database profile}
     ports:
       - "5050:80"
     depends_on:

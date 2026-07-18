@@ -9,4 +9,8 @@ services:
     autoDeploy: true
     envVars:
       - key: SPRING_PROFILES_ACTIVE
-        value: production
+        value: prod
+      - key: LOG_LEVEL_ROOT
+        value: INFO
+      - key: LOG_LEVEL_APP
+        value: INFO
