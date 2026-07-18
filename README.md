@@ -16,6 +16,7 @@ sudoku-engine/
 |   +-- css/
 |   +-- js/
 +-- docs/                    # Project documentation
++-- pom.xml                  # Parent Maven build for IDE and root-level verification
 +-- Dockerfile               # Production container build
 +-- docker-compose.yml       # Local one-command container startup
 +-- .github/workflows/ci.yml # GitHub Actions CI pipeline
@@ -54,13 +55,13 @@ PostgreSQL runs on `localhost:5432`; pgAdmin runs on `localhost:5050`.
 
 ## Build And Test
 
-From `backend/`:
+From the repository root:
 
 ```bash
 mvn clean verify
 ```
 
-From the repository root:
+Build the production image:
 
 ```bash
 docker build -t sudoku-engine:local .
