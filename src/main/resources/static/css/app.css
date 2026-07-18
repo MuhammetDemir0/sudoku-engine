@@ -160,9 +160,25 @@ button:disabled {
     outline-offset: -3px;
 }
 
+.cell.peer {
+    background: #edf7ff;
+}
+
+.cell.selected {
+    background: #d8ecff;
+}
+
 .cell.given {
     background: #eef2f6;
     color: #111827;
+}
+
+.cell.given.peer {
+    background: #dde9f4;
+}
+
+.cell.given.selected {
+    background: #cbdff1;
 }
 
 .cell.solved {
