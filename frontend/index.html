@@ -3,62 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudoku Engine - Solver & Visualizer</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Sudoku Engine</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>Sudoku Engine</h1>
-            <p class="subtitle">Generation, Solving & Algorithm Visualization Platform</p>
+    <div class="app-shell">
+        <header class="topbar">
+            <div>
+                <h1>Sudoku Engine</h1>
+                <p id="statusText" class="status-text" aria-live="polite">Ready</p>
+            </div>
+            <div class="timer" aria-label="Elapsed time">
+                <span id="timerDisplay">00:00</span>
+            </div>
         </header>
 
-        <main class="main">
-            <!-- Sudoku Grid -->
-            <section class="sudoku-section">
-                <div class="sudoku-container">
-                    <div id="sudokuGrid" class="sudoku-grid">
-                        <!-- Grid will be populated by JavaScript -->
-                    </div>
-                </div>
+        <main class="workspace">
+            <section class="board-panel" aria-label="Sudoku board">
+                <div id="board" class="sudoku-board"></div>
             </section>
 
-            <!-- Controls -->
-            <section class="controls-section">
-                <div class="button-group">
-                    <button id="newPuzzleBtn" class="btn btn-primary">New Puzzle</button>
-                    <button id="solvePuzzleBtn" class="btn btn-success">Solve</button>
-                    <button id="resetPuzzleBtn" class="btn btn-warning">Reset</button>
-                    <button id="clearPuzzleBtn" class="btn btn-danger">Clear</button>
-                </div>
-
-                <!-- Difficulty Selector -->
-                <div class="difficulty-selector">
-                    <label for="difficultySelect">Difficulty:</label>
-                    <select id="difficultySelect">
-                        <option value="easy">Easy</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="hard">Hard</option>
-                        <option value="expert">Expert</option>
+            <aside class="side-panel" aria-label="Puzzle controls">
+                <div class="control-row">
+                    <label for="difficulty">Difficulty</label>
+                    <select id="difficulty">
+                        <option value="EASY">Easy</option>
+                        <option value="MEDIUM" selected>Medium</option>
+                        <option value="HARD">Hard</option>
+                        <option value="EXPERT">Expert</option>
                     </select>
                 </div>
-            </section>
 
-            <!-- Info Panel -->
-            <section class="info-section">
-                <div class="info-panel">
-                    <h3>Info</h3>
-                    <p id="solvingTime" class="info-item">Solving Time: -</p>
-                    <p id="puzzleStatus" class="info-item">Status: <span>Ready</span></p>
+                <div class="button-grid">
+                    <button id="generateBtn" type="button">New Game</button>
+                    <button id="solveBtn" type="button">Solve</button>
+                    <button id="hintBtn" type="button">Hint</button>
+                    <button id="validateBtn" type="button">Validate</button>
+                    <button id="resetBtn" type="button">Reset</button>
+                    <button id="clearBtn" type="button">Clear</button>
                 </div>
-            </section>
-        </main>
 
-        <footer class="footer">
-            <p>&copy; 2024 Sudoku Engine. Built with Java, Spring Boot & Vanilla JavaScript.</p>
-        </footer>
+                <section class="visualizer-controls" aria-label="Algorithm visualization controls">
+                    <div class="button-grid">
+                        <button id="playVizBtn" type="button" disabled>Play</button>
+                        <button id="pauseVizBtn" type="button" disabled>Pause</button>
+                        <button id="resetVizBtn" type="button" disabled>Reset Steps</button>
+                    </div>
+                    <label for="speedControl">Speed</label>
+                    <input id="speedControl" type="range" min="1" max="5" value="3">
+                    <p id="stepProgress">No steps loaded.</p>
+                </section>
+
+                <section class="metrics" aria-label="Solver metrics">
+                    <dl>
+                        <div>
+                            <dt>Visited</dt>
+                            <dd id="visitedNodes">-</dd>
+                        </div>
+                        <div>
+                            <dt>Backtracks</dt>
+                            <dd id="backtracks">-</dd>
+                        </div>
+                        <div>
+                            <dt>Depth</dt>
+                            <dd id="maxDepth">-</dd>
+                        </div>
+                        <div>
+                            <dt>Runtime</dt>
+                            <dd id="runtime">-</dd>
+                        </div>
+                        <div>
+                            <dt>Hints</dt>
+                            <dd id="hintCount">0</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section class="message-panel" aria-label="Current message">
+                    <p id="messageText">Create a puzzle or enter a board.</p>
+                </section>
+            </aside>
+        </main>
     </div>
 
-    <script src="js/app.js"></script>
+    <div id="loadingOverlay" class="loading-overlay" hidden aria-live="polite" aria-busy="true">
+        <div class="loading-card">
+            <span class="loading-spinner" aria-hidden="true"></span>
+            <p id="loadingText">Loading</p>
+        </div>
+    </div>
+
+    <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+    <script type="module" src="/js/game.js"></script>
 </body>
 </html>

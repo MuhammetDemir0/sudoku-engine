@@ -1,12 +1,13 @@
 # syntax=docker/dockerfile:1.7
 
 FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
-WORKDIR /workspace
+WORKDIR /workspace/backend
 
-COPY pom.xml .
+COPY backend/pom.xml .
 RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests dependency:go-offline
 
-COPY src ./src
+COPY backend/src ./src
+COPY frontend ../frontend
 RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
@@ -16,7 +17,7 @@ RUN apk add --no-cache curl \
     && adduser -S sudoku -G sudoku
 
 WORKDIR /app
-COPY --from=build /workspace/target/sudoku-engine-1.0.0.jar /app/sudoku-engine.jar
+COPY --from=build /workspace/backend/target/sudoku-engine-1.0.0.jar /app/sudoku-engine.jar
 
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
 
