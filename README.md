@@ -30,6 +30,15 @@ Live deployment is configured for Render through `render.yaml`.
 After the Render service is created, add the public URL to this section and to
 the GitHub repository Website field.
 
+## Release
+
+Current stable version: `v1.0.0`.
+
+- Release notes: [docs/releases/v1.0.0.md](docs/releases/v1.0.0.md)
+- Downloadable JAR artifact: `backend/target/sudoku-engine-1.0.0.jar`
+- Docker image tag used for release validation: `sudoku-engine:v1.0.0`
+- Known issues are tracked in the release notes.
+
 ## Screenshots
 
 Desktop interface:
