@@ -55,17 +55,18 @@
       <rect x="28" y="136" width="132" height="44" rx="8" fill="#2563eb"/><text x="94" y="164" fill="#fff">New Game</text>
       <rect x="174" y="136" width="132" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="240" y="164" fill="#172033">Solve</text>
       <rect x="320" y="136" width="132" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="386" y="164" fill="#172033">Hint</text>
-      <rect x="28" y="194" width="132" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="94" y="222" fill="#172033">Validate</text>
-      <rect x="174" y="194" width="132" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="240" y="222" fill="#172033">Reset</text>
-      <rect x="320" y="194" width="132" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="386" y="222" fill="#172033">Clear</text>
+      <rect x="28" y="194" width="132" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="94" y="222" fill="#172033">Pause</text>
+      <rect x="174" y="194" width="132" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="240" y="222" fill="#172033">Pencil</text>
+      <rect x="320" y="194" width="132" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="386" y="222" fill="#172033">Reset</text>
+      <rect x="28" y="252" width="132" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="94" y="280" fill="#172033">Clear</text>
     </g>
-    <text x="28" y="292" font-size="20" font-weight="700" fill="#172033">Solver Metrics</text>
-    <text x="28" y="332" font-size="15" fill="#607089">Visited</text><text x="180" y="332" font-size="15" fill="#172033">128</text>
-    <text x="28" y="364" font-size="15" fill="#607089">Backtracks</text><text x="180" y="364" font-size="15" fill="#172033">11</text>
-    <text x="28" y="396" font-size="15" fill="#607089">Depth</text><text x="180" y="396" font-size="15" fill="#172033">42</text>
-    <text x="28" y="428" font-size="15" fill="#607089">Runtime</text><text x="180" y="428" font-size="15" fill="#172033">7 ms</text>
-    <rect x="260" y="292" width="192" height="116" rx="10" fill="#ecfdf5" stroke="#a7f3d0"/>
-    <text x="284" y="330" font-size="18" font-weight="700" fill="#047857">Hint ready</text>
-    <text x="284" y="360" font-size="14" fill="#065f46">Cell (4,4) can safely be 5.</text>
+    <text x="28" y="334" font-size="20" font-weight="700" fill="#172033">Solver Metrics</text>
+    <text x="28" y="374" font-size="15" fill="#607089">Visited</text><text x="180" y="374" font-size="15" fill="#172033">128</text>
+    <text x="28" y="406" font-size="15" fill="#607089">Backtracks</text><text x="180" y="406" font-size="15" fill="#172033">11</text>
+    <text x="28" y="438" font-size="15" fill="#607089">Depth</text><text x="180" y="438" font-size="15" fill="#172033">42</text>
+    <text x="28" y="470" font-size="15" fill="#607089">Runtime</text><text x="180" y="470" font-size="15" fill="#172033">7 ms</text>
+    <rect x="260" y="334" width="192" height="116" rx="10" fill="#ecfdf5" stroke="#a7f3d0"/>
+    <text x="284" y="372" font-size="18" font-weight="700" fill="#047857">Hint ready</text>
+    <text x="284" y="402" font-size="14" fill="#065f46">Cell (4,4) can safely be 5.</text>
   </g>
 </svg>
