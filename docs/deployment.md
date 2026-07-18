@@ -13,9 +13,9 @@ local development:
 server.port=${PORT:8080}
 ```
 
-The Docker image starts with the `production` Spring profile by default. The
-production profile disables the H2 console, limits public actuator exposure, and
-keeps logging at `INFO`.
+The Docker image starts with the `prod` Spring profile by default. The `prod`
+profile disables the H2 console, limits public actuator exposure, and keeps
+logging at `INFO` unless `LOG_LEVEL_ROOT` or `LOG_LEVEL_APP` is provided.
 
 ## Render Deployment
 
@@ -30,7 +30,35 @@ service from the repository root.
 6. Call one API endpoint, for example `POST /api/v1/puzzles/generate`.
 
 Render injects `PORT` automatically. The service also sets
-`SPRING_PROFILES_ACTIVE=production`.
+`SPRING_PROFILES_ACTIVE=prod`.
+
+## Profiles
+
+Use `dev` for local development:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+Use `prod` for hosted runtime:
+
+```bash
+SPRING_PROFILES_ACTIVE=prod
+```
+
+The following settings are environment-driven:
+
+```text
+PORT
+LOG_LEVEL_ROOT
+LOG_LEVEL_APP
+DATABASE_URL
+DATABASE_USERNAME
+DATABASE_PASSWORD
+```
+
+No production secrets are stored in the repository. Database credentials must be
+provided by the hosting platform or the local shell environment.
 
 ## Repository Website Field
 
