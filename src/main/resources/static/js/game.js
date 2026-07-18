@@ -31,13 +31,17 @@ elements.reset.addEventListener("click", onReset);
 elements.clear.addEventListener("click", onClear);
 
 async function onGenerate() {
-    await run("Generating", async () => {
-        const response = await generatePuzzle(elements.difficulty.value);
-        boardView.loadPuzzle(response.puzzle);
+    await run("Loading new game", async () => {
+        visualizer.stop();
+        boardView.clear();
         resetMetrics();
         timer.reset();
+        setMessage("Loading a new puzzle.", "loading");
+
+        const response = await generatePuzzle(elements.difficulty.value);
+        boardView.loadPuzzle(response.puzzle);
         timer.start();
-        setMessage(`${response.difficulty} puzzle ready.`);
+        setMessage(`${response.difficulty} puzzle ready.`, "success");
     });
 }
 
@@ -46,13 +50,13 @@ async function onSolve() {
         const response = await solvePuzzle(boardView.read(), true, "MRV");
         updateMetrics(response.metrics);
         if (!response.solved) {
-            setMessage("This board could not be solved.");
+            setMessage("This board could not be solved.", "error");
             return;
         }
 
         await visualizer.play(response.steps, response.board);
         timer.stop();
-        setMessage("Solved.");
+        setMessage("Solved.", "success");
     });
 }
 
@@ -60,7 +64,7 @@ async function onHint() {
     await run("Finding hint", async () => {
         const response = await requestHint(boardView.read());
         if (response === null) {
-            setMessage("The board is already complete.");
+            setMessage("The board is already complete.", "success");
             return;
         }
         boardView.markHint(response.row, response.col, response.value);
@@ -73,11 +77,11 @@ async function onValidate() {
         const response = await validateBoard(boardView.read());
         if (response.valid) {
             boardView.clearMarks();
-            setMessage("Board is valid.");
+            setMessage("Board is valid.", "success");
             return;
         }
         boardView.markInvalid(response.violations);
-        setMessage(`${response.violations.length} violation(s) found.`);
+        setMessage(`${response.violations.length} violation(s) found.`, "error");
     });
 }
 
@@ -109,7 +113,7 @@ async function run(status, action) {
         setStatus("Ready");
     } catch (error) {
         setStatus("Error");
-        setMessage(error.message);
+        setMessage(error.message, "error");
     } finally {
         setBusy(false);
     }
@@ -127,8 +131,9 @@ function setStatus(value) {
     elements.status.textContent = value;
 }
 
-function setMessage(value) {
+function setMessage(value, state = "info") {
     elements.message.textContent = value;
+    elements.message.dataset.state = state;
 }
 
 function updateMetrics(metrics) {
