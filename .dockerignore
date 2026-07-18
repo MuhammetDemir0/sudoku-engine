@@ -4,6 +4,7 @@
 Dockerfile
 
 target
+backend/target
 *.log
 logs
 
@@ -23,3 +24,4 @@ node_modules
 npm-debug.log
 
 src/test
+backend/src/test
