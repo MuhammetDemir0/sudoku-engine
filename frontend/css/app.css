@@ -258,7 +258,8 @@ button:disabled {
 
 .sudoku-board.is-paused .cell,
 .sudoku-board.is-paused .notes {
-    filter: blur(6px);
+    filter: blur(18px);
+    opacity: 0.08;
 }
 
 .sudoku-board.is-paused::after {
@@ -268,7 +269,8 @@ button:disabled {
     z-index: 5;
     display: grid;
     place-items: center;
-    background: rgba(255, 255, 255, 0.34);
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(6px);
     color: var(--text);
     font-size: clamp(28px, 7vw, 56px);
     font-weight: 900;
@@ -320,7 +322,9 @@ button:disabled {
     display: grid;
     place-items: center;
     width: 100%;
+    min-width: 0;
     aspect-ratio: 1;
+    padding: 0;
     border-radius: 999px;
     background: var(--soft);
     color: var(--primary);
@@ -331,6 +335,13 @@ button:disabled {
 .round-tool:hover,
 .round-tool.active {
     background: var(--soft-strong);
+}
+
+#pauseGameBtn {
+    font-size: clamp(11px, 1.4vw, 14px);
+    line-height: 1;
+    text-align: center;
+    text-transform: uppercase;
 }
 
 .tool-state,
@@ -398,6 +409,12 @@ button:disabled {
 .number-pad button.is-complete {
     color: #98a4b6;
     background: #f7f9fc;
+}
+
+.number-pad.is-paused {
+    pointer-events: none;
+    filter: blur(12px);
+    opacity: 0.12;
 }
 
 .pad-value {

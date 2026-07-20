@@ -293,16 +293,19 @@ function setMessage(value, state = "info") {
 function setGamePaused(isPaused) {
     gamePaused = isPaused;
     boardView.setPaused(isPaused);
+    elements.numberPad.classList.toggle("is-paused", isPaused);
     if (isPaused) {
         timer.pause();
-        elements.pauseGame.textContent = "Resume Game";
+        elements.pauseGame.textContent = "Resume";
+        elements.pauseGame.setAttribute("aria-label", "Resume game");
         setStatus("Paused");
         setMessage("Game paused.");
     } else {
         if (hasActivePuzzle && !gameCompleted && !timer.isRunning()) {
             timer.resume();
         }
-        elements.pauseGame.textContent = "Pause Game";
+        elements.pauseGame.textContent = "Pause";
+        elements.pauseGame.setAttribute("aria-label", "Pause game");
         setStatus("Ready");
     }
     updateControlAvailability(false);
