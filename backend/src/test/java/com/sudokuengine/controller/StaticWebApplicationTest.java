@@ -197,7 +197,9 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString(".cell.selected")))
                 .andExpect(content().string(containsString(".notes")))
                 .andExpect(content().string(containsString(".sudoku-board.is-paused")))
-                .andExpect(content().string(containsString("filter: blur(18px)")))
+                .andExpect(content().string(containsString("-webkit-text-fill-color: transparent")))
+                .andExpect(content().string(containsString("visibility: hidden")))
+                .andExpect(content().string(containsString("#pauseGameBtn.is-resume::before")))
                 .andExpect(content().string(containsString(".number-pad.is-paused")));
     }
 

@@ -258,8 +258,18 @@ button:disabled {
 
 .sudoku-board.is-paused .cell,
 .sudoku-board.is-paused .notes {
-    filter: blur(18px);
-    opacity: 0.08;
+    filter: none;
+    opacity: 0;
+}
+
+.sudoku-board.is-paused .cell {
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+}
+
+.sudoku-board.is-paused .notes {
+    visibility: hidden;
 }
 
 .sudoku-board.is-paused::after {
@@ -325,6 +335,7 @@ button:disabled {
     min-width: 0;
     aspect-ratio: 1;
     padding: 0;
+    overflow: hidden;
     border-radius: 999px;
     background: var(--soft);
     color: var(--primary);
@@ -338,10 +349,25 @@ button:disabled {
 }
 
 #pauseGameBtn {
-    font-size: clamp(11px, 1.4vw, 14px);
-    line-height: 1;
+    padding: 4px;
+    font-size: 0;
+    line-height: 0.95;
     text-align: center;
     text-transform: uppercase;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+#pauseGameBtn::before {
+    content: "II";
+    font-size: clamp(18px, 3vw, 26px);
+    line-height: 1;
+}
+
+#pauseGameBtn.is-resume::before {
+    content: "Play";
+    font-size: clamp(10px, 1.2vw, 12px);
+    font-weight: 900;
 }
 
 .tool-state,
@@ -413,8 +439,9 @@ button:disabled {
 
 .number-pad.is-paused {
     pointer-events: none;
-    filter: blur(12px);
-    opacity: 0.12;
+    visibility: hidden;
+    filter: none;
+    opacity: 0;
 }
 
 .pad-value {
