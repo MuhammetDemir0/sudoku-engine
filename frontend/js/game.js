@@ -49,6 +49,7 @@ elements.clear.addEventListener("click", onClearSelected);
 elements.difficultyButtons.forEach(button => button.addEventListener("click", () => selectDifficulty(button)));
 elements.numberPad.addEventListener("click", onNumberPadClick);
 updateNumberCounts();
+updateControlAvailability(false);
 
 async function onGenerate() {
     await run("Loading new game", async () => {
@@ -313,7 +314,7 @@ function setGamePaused(isPaused) {
 }
 
 function updateControlAvailability(isBusy = false) {
-    elements.hint.disabled = isBusy || gameCompleted || gamePaused;
+    elements.hint.disabled = isBusy || !hasActivePuzzle || gameCompleted || gamePaused;
     elements.pencil.disabled = isBusy || gameCompleted || gamePaused;
     elements.pauseGame.disabled = isBusy || !hasActivePuzzle || gameCompleted;
     elements.undo.disabled = isBusy || gameCompleted || gamePaused || moveHistory.length === 0;

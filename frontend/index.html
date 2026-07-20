@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sudoku Engine</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="/css/app.css?v=20260720-pause-lock">
 </head>
 <body>
     <div class="app-shell">
@@ -56,7 +56,7 @@
                         <span class="pencil-glyph" aria-hidden="true">&#9998;</span>
                         <span id="pencilState" class="tool-state">Off</span>
                     </button>
-                    <button id="hintBtn" class="round-tool hint-tool" type="button" aria-label="Get a hint">
+                    <button id="hintBtn" class="round-tool hint-tool" type="button" aria-label="Get a hint" disabled>
                         <span aria-hidden="true">&#9906;</span>
                         <span id="hintCount" class="hint-badge">0</span>
                     </button>
@@ -82,6 +82,6 @@
 
     <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-    <script type="module" src="/js/game.js"></script>
+    <script type="module" src="/js/game.js?v=20260720-pause-lock"></script>
 </body>
 </html>
