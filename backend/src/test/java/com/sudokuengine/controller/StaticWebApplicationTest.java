@@ -43,7 +43,7 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("aria-pressed=\"false\"")))
                 .andExpect(content().string(containsString("id=\"loadingOverlay\"")))
                 .andExpect(content().string(containsString("id=\"toastRegion\"")))
-                .andExpect(content().string(containsString("type=\"module\" src=\"/js/game.js\"")));
+                .andExpect(content().string(containsString("type=\"module\" src=\"/js/game.js?v=")));
     }
 
     @Test
@@ -143,7 +143,7 @@ class StaticWebApplicationTest {
                 .andExpect(content().string(containsString("let hintCount = 0;")))
                 .andExpect(content().string(containsString("incrementHintCount();")))
                 .andExpect(content().string(containsString("elements.hintCount.textContent = String(hintCount);")))
-                .andExpect(content().string(containsString("elements.hint.disabled = isBusy || gameCompleted || gamePaused;")))
+                .andExpect(content().string(containsString("elements.hint.disabled = isBusy || !hasActivePuzzle || gameCompleted || gamePaused;")))
                 .andExpect(content().string(containsString("setGameCompleted(true);")));
     }
 
