@@ -294,9 +294,10 @@ function setGamePaused(isPaused) {
     gamePaused = isPaused;
     boardView.setPaused(isPaused);
     elements.numberPad.classList.toggle("is-paused", isPaused);
+    elements.pauseGame.classList.toggle("is-resume", isPaused);
     if (isPaused) {
         timer.pause();
-        elements.pauseGame.textContent = "Resume";
+        elements.pauseGame.textContent = "";
         elements.pauseGame.setAttribute("aria-label", "Resume game");
         setStatus("Paused");
         setMessage("Game paused.");
@@ -304,7 +305,7 @@ function setGamePaused(isPaused) {
         if (hasActivePuzzle && !gameCompleted && !timer.isRunning()) {
             timer.resume();
         }
-        elements.pauseGame.textContent = "Pause";
+        elements.pauseGame.textContent = "";
         elements.pauseGame.setAttribute("aria-label", "Pause game");
         setStatus("Ready");
     }
