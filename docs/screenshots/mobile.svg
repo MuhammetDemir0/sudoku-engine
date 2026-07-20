@@ -1,45 +1,69 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="390" height="760" viewBox="0 0 390 760" role="img" aria-labelledby="title desc">
-  <title id="title">Sudoku Engine mobile interface</title>
-  <desc id="desc">Mobile view with stacked timer, Sudoku board, and compact controls.</desc>
-  <rect width="390" height="760" fill="#f4f7fb"/>
-  <text x="24" y="54" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700" fill="#172033">Sudoku Engine</text>
-  <text x="25" y="82" font-family="Inter, Arial, sans-serif" font-size="15" fill="#607089">Ready</text>
-  <rect x="274" y="34" width="84" height="38" rx="9" fill="#172033"/>
-  <text x="292" y="59" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#fff">00:00</text>
-  <g transform="translate(24 112)">
-    <rect width="342" height="342" rx="8" fill="#111827"/>
-    <g fill="#fff">
-      <rect x="3" y="3" width="36" height="36"/><rect x="41" y="3" width="36" height="36"/><rect x="79" y="3" width="36" height="36"/>
-      <rect x="117" y="3" width="36" height="36"/><rect x="155" y="3" width="36" height="36"/><rect x="193" y="3" width="36" height="36"/>
-      <rect x="231" y="3" width="36" height="36"/><rect x="269" y="3" width="36" height="36"/><rect x="307" y="3" width="32" height="36"/>
+  <title id="title">Sudoku Engine mobile game interface</title>
+  <desc id="desc">Mobile view with stacked difficulty tabs, Sudoku board, number strip, mistake counter, timer, compact game controls, and message panel.</desc>
+  <rect width="390" height="760" fill="#ffffff"/>
+
+  <g font-family="Inter, Arial, sans-serif">
+    <text x="14" y="34" font-size="15" font-weight="800" fill="#8a97aa">Zorluk:</text>
+    <text x="75" y="34" font-size="15" font-weight="900" fill="#2f5fb6">Kolay</text>
+    <text x="130" y="34" font-size="15" font-weight="900" fill="#2f415c">Orta</text>
+    <text x="178" y="34" font-size="15" font-weight="900" fill="#6d7a8f">Zor</text>
+    <text x="226" y="34" font-size="15" font-weight="900" fill="#6d7a8f">Uzman</text>
+  </g>
+
+  <g transform="translate(14 58)">
+    <rect width="362" height="362" fill="#ffffff" stroke="#294263" stroke-width="2"/>
+    <g stroke="#d4dce8" stroke-width="1">
+      <path d="M40.22 0V362M80.44 0V362M120.67 0V362M160.89 0V362M201.11 0V362M241.33 0V362M281.56 0V362M321.78 0V362"/>
+      <path d="M0 40.22H362M0 80.44H362M0 120.67H362M0 160.89H362M0 201.11H362M0 241.33H362M0 281.56H362M0 321.78H362"/>
     </g>
-    <g stroke="#d2d9e5" stroke-width="1.5">
-      <path d="M0 38H342M0 76H342M0 114H342M0 152H342M0 190H342M0 228H342M0 266H342M0 304H342"/>
-      <path d="M38 0V342M76 0V342M114 0V342M152 0V342M190 0V342M228 0V342M266 0V342M304 0V342"/>
+    <g stroke="#294263" stroke-width="2.2">
+      <path d="M120.67 0V362M241.33 0V362M0 120.67H362M0 241.33H362"/>
     </g>
-    <g stroke="#111827" stroke-width="4">
-      <path d="M114 0V342M228 0V342M0 114H342M0 228H342"/>
-    </g>
-    <rect x="117" y="117" width="36" height="36" fill="#dbeafe"/>
-    <g font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="#1f2937" text-anchor="middle" dominant-baseline="middle">
-      <text x="21" y="21">8</text><text x="135" y="21">9</text><text x="173" y="21">1</text><text x="211" y="21">3</text><text x="325" y="21">4</text>
-      <text x="21" y="59">9</text><text x="59" y="59">1</text><text x="97" y="59">4</text><text x="135" y="59">8</text><text x="173" y="59">6</text><text x="211" y="59">2</text><text x="287" y="59">7</text>
-      <text x="21" y="97">3</text><text x="59" y="97">2</text><text x="97" y="97">6</text><text x="173" y="97">4</text><text x="211" y="97">7</text>
-      <text x="21" y="135">6</text><text x="173" y="135">8</text><text x="249" y="135">9</text>
-      <text x="135" y="173">3</text><text x="211" y="173">9</text><text x="287" y="173">5</text><text x="325" y="173">6</text>
-      <text x="249" y="211">8</text><text x="287" y="211">4</text><text x="325" y="211">1</text>
+    <rect x="120.67" y="120.67" width="40.22" height="40.22" fill="#dcebf8"/>
+    <rect x="160.89" y="120.67" width="40.22" height="40.22" fill="#e8f2fb"/>
+    <rect x="201.11" y="120.67" width="40.22" height="40.22" fill="#e8f2fb"/>
+    <rect x="120.67" y="160.89" width="40.22" height="40.22" fill="#e8f2fb"/>
+    <g font-family="Inter, Arial, sans-serif" font-size="26" font-weight="500" fill="#31445f" text-anchor="middle" dominant-baseline="middle">
+      <text x="60" y="20">2</text><text x="141" y="20">7</text><text x="221" y="20">4</text>
+      <text x="60" y="60">5</text><text x="141" y="60">8</text><text x="221" y="60">1</text><text x="302" y="60">4</text>
+      <text x="20" y="101">7</text><text x="60" y="101">8</text><text x="101" y="101">4</text><text x="181" y="101">3</text><text x="221" y="101">9</text><text x="262" y="101">5</text>
+      <text x="101" y="141">6</text><text x="141" y="141">9</text><text x="262" y="141">1</text>
+      <text x="60" y="181">9</text><text x="101" y="181">5</text><text x="141" y="181">1</text><text x="262" y="181">4</text><text x="302" y="181">8</text>
+      <text x="60" y="221">7</text><text x="101" y="221">8</text><text x="221" y="221">5</text><text x="342" y="221">9</text>
+      <text x="141" y="262">3</text><text x="181" y="262">6</text><text x="221" y="262">2</text>
+      <text x="181" y="302">9</text><text x="221" y="302">7</text>
+      <text x="20" y="342">8</text><text x="60" y="342">4</text><text x="101" y="342">7</text><text x="302" y="342">6</text>
     </g>
   </g>
-  <g transform="translate(24 482)" font-family="Inter, Arial, sans-serif">
-    <text x="0" y="20" font-size="13" font-weight="700" fill="#607089">DIFFICULTY</text>
-    <rect x="0" y="32" width="342" height="42" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
-    <text x="18" y="59" font-size="16" fill="#172033">Medium</text>
-    <rect x="0" y="94" width="160" height="42" rx="8" fill="#2563eb"/><text x="80" y="121" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">New Game</text>
-    <rect x="182" y="94" width="160" height="42" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="262" y="121" font-size="15" font-weight="700" fill="#172033" text-anchor="middle">Hint</text>
-    <rect x="0" y="150" width="160" height="42" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="80" y="177" font-size="15" font-weight="700" fill="#172033" text-anchor="middle">Pause</text>
-    <rect x="182" y="150" width="160" height="42" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="262" y="177" font-size="15" font-weight="700" fill="#172033" text-anchor="middle">Pencil</text>
-    <rect x="0" y="212" width="342" height="76" rx="10" fill="#ecfdf5" stroke="#a7f3d0"/>
-    <text x="20" y="246" font-size="17" font-weight="700" fill="#047857">Keep going</text>
-    <text x="20" y="272" font-size="14" fill="#065f46">Current board is valid.</text>
+
+  <g transform="translate(14 432)" font-family="Inter, Arial, sans-serif">
+    <g fill="#ffffff" stroke="#6c96dc" stroke-width="1.5">
+      <rect x="0" y="0" width="40.22" height="42"/><rect x="40.22" y="0" width="40.22" height="42"/><rect x="80.44" y="0" width="40.22" height="42"/>
+      <rect x="120.67" y="0" width="40.22" height="42"/><rect x="160.89" y="0" width="40.22" height="42"/><rect x="201.11" y="0" width="40.22" height="42"/>
+      <rect x="241.33" y="0" width="40.22" height="42"/><rect x="281.56" y="0" width="40.22" height="42"/><rect x="321.78" y="0" width="40.22" height="42"/>
+    </g>
+    <g fill="#8b94a3" font-size="9" font-weight="900"><text x="6" y="12">7</text><text x="46" y="12">7</text><text x="87" y="12">7</text><text x="127" y="12">4</text><text x="167" y="12">5</text><text x="207" y="12">5</text><text x="247" y="12">3</text><text x="288" y="12">4</text><text x="328" y="12">4</text></g>
+    <g fill="#8b94a3" font-size="24" font-weight="900" text-anchor="middle"><text x="20" y="34">1</text><text x="60" y="34">2</text><text x="101" y="34">3</text><text x="141" y="34">4</text><text x="181" y="34">5</text><text x="221" y="34">6</text><text x="262" y="34">7</text><text x="302" y="34">8</text><text x="342" y="34">9</text></g>
+  </g>
+
+  <g transform="translate(22 505)" font-family="Inter, Arial, sans-serif">
+    <text x="0" y="18" font-size="15" font-weight="800" fill="#6b7890">Hatalar</text>
+    <text x="0" y="45" font-size="21" font-weight="900" fill="#172b49">0/3</text>
+    <text x="330" y="18" font-size="15" font-weight="800" fill="#6b7890" text-anchor="end">S&#252;re</text>
+    <text x="330" y="45" font-size="21" font-weight="900" fill="#172b49" text-anchor="end">00:22</text>
+    <g transform="translate(0 64)">
+      <circle cx="28" cy="28" r="28" fill="#f1f5fb"/><text x="28" y="37" font-size="27" font-weight="700" fill="#89a2d1" text-anchor="middle">&#8630;</text>
+      <circle cx="96" cy="28" r="28" fill="#f1f5fb"/><text x="96" y="38" font-size="27" font-weight="700" fill="#2f5fb6" text-anchor="middle">&#9003;</text>
+      <circle cx="164" cy="28" r="28" fill="#f1f5fb"/><text x="164" y="38" font-size="25" font-weight="700" fill="#2f5fb6" text-anchor="middle">&#9998;</text>
+      <rect x="174" y="-5" width="31" height="20" rx="10" fill="#aab4c3"/><text x="190" y="9" font-size="10" font-weight="900" fill="#fff" text-anchor="middle">OFF</text>
+      <circle cx="232" cy="28" r="28" fill="#f1f5fb"/><text x="232" y="37" font-size="27" font-weight="700" fill="#2f5fb6" text-anchor="middle">&#9906;</text>
+      <rect x="242" y="-5" width="28" height="20" rx="10" fill="#7c99d8"/><text x="256" y="9" font-size="11" font-weight="900" fill="#fff" text-anchor="middle">0</text>
+      <circle cx="300" cy="28" r="28" fill="#e9eef5"/><text x="300" y="37" font-size="23" font-weight="900" fill="#2f5fb6" text-anchor="middle">II</text>
+    </g>
+    <rect x="0" y="138" width="330" height="58" rx="6" fill="#6384ca"/>
+    <text x="165" y="174" font-size="21" font-weight="900" fill="#fff" text-anchor="middle">Yeni Oyun</text>
+    <rect x="0" y="208" width="330" height="42" rx="6" fill="#e9eff7"/>
+    <text x="165" y="235" font-size="14" font-weight="900" fill="#2f5fb6" text-anchor="middle">Ba&#351;tan Ba&#351;la</text>
   </g>
 </svg>
