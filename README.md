@@ -4,9 +4,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Sudoku Engine is a full-stack Sudoku application with puzzle generation,
-solving, validation, hints, difficulty analysis, and browser-based algorithm
-visualization. The backend is Java 21 and Spring Boot; the frontend is a
-modular vanilla JavaScript app served by the same Spring Boot process.
+solving, validation, hints, difficulty analysis, and a responsive browser game
+interface. The backend is Java 21 and Spring Boot; the frontend is a modular
+vanilla JavaScript app served by the same Spring Boot process.
 
 ## Overview
 
@@ -16,8 +16,8 @@ The project is designed as a small but production-minded Sudoku platform:
 - Solve puzzles with performance metrics and optional step-by-step output.
 - Validate row, column, and 3x3 box conflicts.
 - Request safe hints without mutating the submitted board.
-- Play Sudoku in a responsive browser UI with timer, reset, validation, hints,
-  and solver visualization controls.
+- Play Sudoku in a responsive browser UI with timer, reset, pause, pencil
+  notes, mistake tracking, hints, and backend completion verification.
 
 ## Live Demo
 
@@ -59,10 +59,11 @@ Mobile interface:
 - Backend final validation for completed boards.
 - New game flow with difficulty selection, loading state, and friendly errors.
 - Hint endpoint integration with highlighted cells, explanation text, and hint
-  usage count.
-- Timer, reset flow, success message, and incorrect-completion handling.
-- Backtracking visualization with play, pause, reset, speed control, step types,
-  and solver metrics.
+  usage count; hints stay disabled until a puzzle is active.
+- Timer, pause/resume flow that hides the board values, reset flow, success
+  message, and incorrect-completion handling.
+- Pencil notes with visible note state and automatic peer-note cleanup.
+- Number strip below the board showing how many of each digit remain.
 - Swagger UI and OpenAPI descriptions for the REST API.
 - Global API exception handling with consistent error responses.
 - Docker, Docker Compose, CI, coverage reporting, and production profile support.
@@ -101,7 +102,7 @@ same runtime.
 ## Algorithms
 
 - `BacktrackingSudokuSolver` performs depth-first solving and can emit place and
-  remove steps for visualization.
+  remove steps for API consumers that request detailed solve steps.
 - `MrvSudokuSolver` uses the minimum remaining values heuristic to choose the
   next constrained empty cell.
 - `SudokuValidator` reports all row, column, and box violations without exposing
@@ -305,7 +306,8 @@ Feature-branch pushes no longer create a duplicate PR check.
 
 - Publish the first Render live URL and update the repository Website field.
 - Add persistent user game history and saved puzzle sessions.
-- Add richer visualization controls for strategy comparison.
+- Reintroduce optional strategy-visualization controls in a separate analysis
+  view without exposing one-click solving in the game screen.
 - Add accessibility audits to CI.
 - Add production database migration tooling before storing durable user data.
 
