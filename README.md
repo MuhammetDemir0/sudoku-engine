@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/MuhammetDemir0/sudoku-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/MuhammetDemir0/sudoku-engine/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-46E3B7?logo=render&logoColor=white)](https://sudoku-engine.onrender.com)
 
 Sudoku Engine is a full-stack Sudoku application with puzzle generation,
 solving, validation, hints, difficulty analysis, and a responsive browser game
@@ -23,12 +24,9 @@ The project is designed as a small but production-minded Sudoku platform:
 
 Live deployment is configured for Render through `render.yaml`.
 
-- Live URL: pending first hosted deployment
-- Health endpoint: `/actuator/health`
+- Live application: [sudoku-engine.onrender.com](https://sudoku-engine.onrender.com)
+- Health endpoint: [sudoku-engine.onrender.com/actuator/health](https://sudoku-engine.onrender.com/actuator/health)
 - Deployment guide: [docs/deployment.md](docs/deployment.md)
-
-After the Render service is created, add the public URL to this section and to
-the GitHub repository Website field.
 
 ## Release
 
