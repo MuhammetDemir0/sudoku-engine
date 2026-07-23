@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -66,6 +67,7 @@ class FrontendBrowserTest {
     @BeforeEach
     void setUp() {
         driver = createHeadlessDriver();
+        setViewportSize(1280, 720);
         wait = new WebDriverWait(driver, Duration.ofSeconds(8));
     }
 
@@ -129,6 +131,107 @@ class FrontendBrowserTest {
     }
 
     @Test
+    void incorrectValueStaysRedIncrementsMistakesAndClearsWhenCorrected() throws Exception {
+        openHomePageWithMockApi();
+        driver.findElement(By.id("generateBtn")).click();
+        waitForMessage("MEDIUM puzzle ready.");
+
+        WebElement editableCell = cell(0, 2);
+        editableCell.click();
+        editableCell.sendKeys("1");
+
+        wait.until(webDriver -> editableCell.getDomAttribute("class").contains("incorrect"));
+        assertEquals("1", editableCell.getDomProperty("value"));
+        assertEquals("true", editableCell.getDomAttribute("aria-invalid"));
+        assertEquals("1/3", text(By.id("mistakeCount")));
+        assertTrue(text(By.id("messageText")).contains("Yanlış sayı"));
+
+        editableCell.sendKeys("4");
+
+        wait.until(webDriver -> !editableCell.getDomAttribute("class").contains("incorrect"));
+        assertEquals("4", editableCell.getDomProperty("value"));
+        assertEquals("false", editableCell.getDomAttribute("aria-invalid"));
+        assertEquals("1/3", text(By.id("mistakeCount")));
+    }
+
+    @Test
+    void conflictingIncorrectMoveCountsOnlyOnceAndThirdMistakeLocksGame() throws Exception {
+        openHomePageWithMockApi();
+        driver.findElement(By.id("generateBtn")).click();
+        waitForMessage("MEDIUM puzzle ready.");
+
+        enterValue(0, 2, 5);
+        assertEquals("1/3", text(By.id("mistakeCount")));
+
+        enterValue(0, 3, 2);
+        assertEquals("2/3", text(By.id("mistakeCount")));
+
+        enterValue(0, 5, 4);
+        waitForMessage("Three mistakes used. Start a new game or reset this puzzle.");
+
+        assertEquals("3/3", text(By.id("mistakeCount")));
+        assertTrue(cell(0, 5).getDomAttribute("class").contains("incorrect"));
+        assertTrue(cell(0, 2).getDomProperty("readOnly").equals("true"));
+    }
+
+    @Test
+    void undoClearAndResetRemoveIncorrectStylingWithoutRefundingMistakes() throws Exception {
+        openHomePageWithMockApi();
+        driver.findElement(By.id("generateBtn")).click();
+        waitForMessage("MEDIUM puzzle ready.");
+
+        enterValue(0, 2, 1);
+        driver.findElement(By.id("undoBtn")).click();
+        assertEquals("", cell(0, 2).getDomProperty("value"));
+        assertTrue(!cell(0, 2).getDomAttribute("class").contains("incorrect"));
+        assertEquals("1/3", text(By.id("mistakeCount")));
+
+        enterValue(0, 2, 1);
+        driver.findElement(By.id("clearBtn")).click();
+        assertEquals("", cell(0, 2).getDomProperty("value"));
+        assertTrue(!cell(0, 2).getDomAttribute("class").contains("incorrect"));
+        assertEquals("2/3", text(By.id("mistakeCount")));
+
+        enterValue(0, 2, 1);
+        driver.findElement(By.id("resetBtn")).click();
+        waitForMessage("Puzzle reset.");
+        assertEquals("", cell(0, 2).getDomProperty("value"));
+        assertTrue(!cell(0, 2).getDomAttribute("class").contains("incorrect"));
+        assertEquals("0/3", text(By.id("mistakeCount")));
+    }
+
+    @Test
+    void hintIsBlockedUntilIncorrectCellIsFixed() throws Exception {
+        openHomePageWithMockApi();
+        driver.findElement(By.id("generateBtn")).click();
+        waitForMessage("MEDIUM puzzle ready.");
+
+        enterValue(0, 2, 1);
+        driver.findElement(By.id("hintBtn")).click();
+
+        waitForMessage("İpucu almadan önce kırmızı hücreyi düzelt.");
+        assertEquals("0", text(By.id("hintCount")));
+        assertEquals(0, fetchCallCountEndingWith("/hint"));
+    }
+
+    @Test
+    void difficultyBoardAndNumberPadFitInDesktopViewport() throws Exception {
+        openHomePage();
+
+        WebElement difficulty = driver.findElement(By.className("difficulty-tabs"));
+        WebElement board = driver.findElement(By.id("board"));
+        WebElement numberPad = driver.findElement(By.id("numberPad"));
+
+        assertTrue(elementBottom(difficulty) <= viewportHeight());
+        assertTrue(elementBottom(board) <= viewportHeight());
+        assertTrue(elementBottom(numberPad) <= viewportHeight());
+        assertEquals(560L, Math.round(elementWidth(board)));
+        assertEquals(9, driver.findElements(By.cssSelector("#numberPad button[data-value]")).stream()
+                .filter(WebElement::isDisplayed)
+                .count());
+    }
+
+    @Test
     void completedPuzzleShowsSuccessMessageAndDisablesHints() throws Exception {
         openHomePageWithMockApi();
         driver.findElement(By.id("generateBtn")).click();
@@ -144,13 +247,13 @@ class FrontendBrowserTest {
         try {
             ChromeOptions options = new ChromeOptions();
             options.addArguments("--headless=new", "--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage",
-                    "--window-size=1280,900");
+                    "--window-size=1280,720");
             return new ChromeDriver(options);
         } catch (WebDriverException chromeFailure) {
             try {
                 EdgeOptions options = new EdgeOptions();
                 options.addArguments("--headless=new", "--disable-gpu", "--no-sandbox", "--disable-dev-shm-usage",
-                        "--window-size=1280,900");
+                        "--window-size=1280,720");
                 return new EdgeDriver(options);
             } catch (WebDriverException edgeFailure) {
                 Assumptions.assumeTrue(false,
@@ -198,9 +301,11 @@ class FrontendBrowserTest {
                     if (path.endsWith("/validate")) {
                         return json({ valid: true, violations: [] });
                     }
-                    return json({ solved: true, board: __PUZZLE__, metrics: {}, steps: [] });
+                    return json({ solved: true, board: __SOLUTION__, metrics: {}, steps: [] });
                 };
-                """.replace("__PUZZLE__", puzzleJson);
+                """
+                .replace("__PUZZLE__", puzzleJson)
+                .replace("__SOLUTION__", objectMapper.writeValueAsString(SOLUTION));
         ((JavascriptExecutor) driver).executeScript(script);
     }
 
@@ -216,6 +321,12 @@ class FrontendBrowserTest {
                 editableCell.sendKeys(String.valueOf(SOLUTION[row][col]));
             }
         }
+    }
+
+    private void enterValue(int row, int col, int value) {
+        WebElement editableCell = cell(row, col);
+        editableCell.click();
+        editableCell.sendKeys(String.valueOf(value));
     }
 
     private WebElement cell(int row, int col) {
@@ -237,9 +348,50 @@ class FrontendBrowserTest {
     private String lastFetchBodyValue(String key) {
         Object value = ((JavascriptExecutor) driver).executeScript("""
                 const calls = window.__sudokuFetchCalls || [];
-                const last = calls[calls.length - 1] || { body: {} };
+                const last = calls.slice().reverse()
+                    .find(call => Object.prototype.hasOwnProperty.call(call.body || {}, arguments[0]))
+                    || { body: {} };
                 return last.body[arguments[0]];
                 """, key);
         return String.valueOf(value);
+    }
+
+    private void setViewportSize(int width, int height) {
+        JavascriptExecutor javascript = (JavascriptExecutor) driver;
+        Number outerWidth = (Number) javascript.executeScript("return window.outerWidth;");
+        Number outerHeight = (Number) javascript.executeScript("return window.outerHeight;");
+        Number innerWidth = (Number) javascript.executeScript("return window.innerWidth;");
+        Number innerHeight = (Number) javascript.executeScript("return window.innerHeight;");
+        int horizontalChrome = Math.max(0, outerWidth.intValue() - innerWidth.intValue());
+        int verticalChrome = Math.max(0, outerHeight.intValue() - innerHeight.intValue());
+        driver.manage().window().setSize(new Dimension(
+                width + horizontalChrome,
+                height + verticalChrome));
+    }
+
+    private long fetchCallCountEndingWith(String path) {
+        Object value = ((JavascriptExecutor) driver).executeScript("""
+                return (window.__sudokuFetchCalls || [])
+                    .filter(call => call.path.endsWith(arguments[0]))
+                    .length;
+                """, path);
+        return ((Number) value).longValue();
+    }
+
+    private double elementBottom(WebElement element) {
+        Object value = ((JavascriptExecutor) driver).executeScript(
+                "return arguments[0].getBoundingClientRect().bottom;", element);
+        return ((Number) value).doubleValue();
+    }
+
+    private double elementWidth(WebElement element) {
+        Object value = ((JavascriptExecutor) driver).executeScript(
+                "return arguments[0].getBoundingClientRect().width;", element);
+        return ((Number) value).doubleValue();
+    }
+
+    private double viewportHeight() {
+        Object value = ((JavascriptExecutor) driver).executeScript("return window.innerHeight;");
+        return ((Number) value).doubleValue();
     }
 }

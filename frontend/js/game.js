@@ -1,4 +1,4 @@
-import { generatePuzzle, requestHint, validateBoard } from "./api.js";
+import { generatePuzzle, requestHint, solvePuzzle, validateBoard } from "./api.js";
 import { SudokuBoardView } from "./board.js";
 import { LoadingIndicator, ToastCenter } from "./feedback.js";
 import { Timer } from "./timer.js";
@@ -13,6 +13,7 @@ let mistakeCount = 0;
 let gamePaused = false;
 let pencilMode = false;
 let moveHistory = [];
+let activeSolution = null;
 const MAX_MISTAKES = 3;
 
 const elements = {
@@ -56,16 +57,23 @@ async function onGenerate() {
         invalidateCompletionValidation();
         boardView.clear();
         updateNumberCounts();
+        hasActivePuzzle = false;
         resetMistakes();
         resetHintCount();
         resetHistory();
         setPencilMode(false);
         setGamePaused(false);
         setGameCompleted(false);
+        activeSolution = null;
         timer.reset();
         setMessage("Loading a new puzzle.", "loading");
 
         const response = await generatePuzzle(elements.difficulty.value);
+        const solved = await solvePuzzle(response.puzzle, false, "MRV");
+        if (!solved.solved || !Array.isArray(solved.board)) {
+            throw new Error("The generated puzzle could not be prepared for play.");
+        }
+        activeSolution = solved.board;
         boardView.loadPuzzle(response.puzzle);
         updateNumberCounts();
         hasActivePuzzle = true;
@@ -75,6 +83,12 @@ async function onGenerate() {
 }
 
 async function onHint() {
+    if (boardView.hasIncorrectCells()) {
+        setStatus("Check mistakes");
+        setMessage("İpucu almadan önce kırmızı hücreyi düzelt.", "error");
+        return;
+    }
+
     await run("Finding hint", async () => {
         const response = await requestHint(boardView.read());
         if (response === null) {
@@ -98,20 +112,28 @@ async function onBoardChange(state) {
     completionValidationRequest++;
     updateNumberCounts(state.board);
 
-    if (state.conflicts.length > 0) {
-        rememberMove(state.move);
+    const incorrectMove = isIncorrectMove(state.move);
+    syncMoveIncorrectState(state.move);
+    rememberMove(state.move);
+
+    if (incorrectMove) {
         recordMistake(state.move);
-        setStatus("Check conflicts");
+        setStatus("Check mistakes");
         if (mistakeCount >= MAX_MISTAKES) {
             endGameAfterMistakes();
             return;
         }
-        setMessage(`${formatConflictSummary(state.conflicts)} Mistakes ${mistakeCount}/${MAX_MISTAKES}.`, "error");
+        setMessage(`Yanlış sayı — Hatalar ${mistakeCount}/${MAX_MISTAKES}.`, "error");
+        return;
+    }
+
+    if (state.conflicts.length > 0) {
+        setStatus("Check conflicts");
+        setMessage(formatConflictSummary(state.conflicts), "error");
         return;
     }
 
     setStatus("Ready");
-    rememberMove(state.move);
     if (!state.complete) {
         setMessage("No conflicts found.");
         return;
@@ -183,6 +205,7 @@ function onClear() {
     boardView.clear();
     updateNumberCounts();
     hasActivePuzzle = false;
+    activeSolution = null;
     resetMistakes();
     resetHintCount();
     resetHistory();
@@ -363,6 +386,28 @@ function recordMistake(move) {
     }
     mistakeCount = Math.min(MAX_MISTAKES, mistakeCount + 1);
     elements.mistakeCount.textContent = `${mistakeCount}/${MAX_MISTAKES}`;
+}
+
+function isIncorrectMove(move) {
+    return Boolean(
+        activeSolution
+        && move
+        && move.source === "value"
+        && move.value !== 0
+        && activeSolution[move.row][move.col] !== move.value
+    );
+}
+
+function syncMoveIncorrectState(move) {
+    if (!activeSolution || !move) {
+        return;
+    }
+    const value = boardView.read()[move.row][move.col];
+    boardView.setIncorrect(
+        move.row,
+        move.col,
+        value !== 0 && activeSolution[move.row][move.col] !== value
+    );
 }
 
 function resetMistakes() {
