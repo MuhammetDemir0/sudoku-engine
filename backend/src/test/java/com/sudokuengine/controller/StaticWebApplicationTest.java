@@ -68,6 +68,7 @@ class StaticWebApplicationTest {
         mockMvc.perform(get("/js/game.js"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Loading a new puzzle.")))
+                .andExpect(content().string(containsString("solvePuzzle(response.puzzle, false, \"MRV\")")))
                 .andExpect(content().string(containsString("boardView.clear();")))
                 .andExpect(content().string(containsString("resetMistakes();")))
                 .andExpect(content().string(containsString("resetHistory();")))
@@ -90,6 +91,8 @@ class StaticWebApplicationTest {
         mockMvc.perform(get("/js/game.js"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("async function onBoardChange(state)")))
+                .andExpect(content().string(containsString("isIncorrectMove(state.move)")))
+                .andExpect(content().string(containsString("boardView.setIncorrect(")))
                 .andExpect(content().string(containsString("validateBoard(state.board)")))
                 .andExpect(content().string(containsString("Completed board verified by the server.")));
 
@@ -97,7 +100,8 @@ class StaticWebApplicationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(".cell.conflict-row")))
                 .andExpect(content().string(containsString(".cell.conflict-column")))
-                .andExpect(content().string(containsString(".cell.conflict-box")));
+                .andExpect(content().string(containsString(".cell.conflict-box")))
+                .andExpect(content().string(containsString(".cell.incorrect")));
     }
 
     @Test

@@ -174,6 +174,21 @@ export class SudokuBoardView {
         });
     }
 
+    setIncorrect(row, col, incorrect) {
+        const cell = this.cellAt(row, col);
+        if (cell) {
+            cell.classList.toggle("incorrect", incorrect);
+            const invalid = incorrect
+                || cell.classList.contains("invalid")
+                || cell.classList.contains("conflict");
+            cell.setAttribute("aria-invalid", String(invalid));
+        }
+    }
+
+    hasIncorrectCells() {
+        return this.container.querySelector(".cell.incorrect") !== null;
+    }
+
     inputSelectedValue(value) {
         const target = this.selectedCell();
         if (!target || target.readOnly || this.paused || this.locked) {
@@ -315,7 +330,11 @@ export class SudokuBoardView {
     clearConflicts() {
         this.cells().forEach(cell => {
             cell.classList.remove("conflict", "conflict-row", "conflict-column", "conflict-box");
-            cell.removeAttribute("aria-invalid");
+            if (cell.classList.contains("incorrect")) {
+                cell.setAttribute("aria-invalid", "true");
+            } else {
+                cell.removeAttribute("aria-invalid");
+            }
             cell.removeAttribute("title");
         });
     }
@@ -356,6 +375,8 @@ export class SudokuBoardView {
         const previous = toCellValue(cell.value);
         cell.value = value === EMPTY ? "" : String(value);
         syncValueClass(cell);
+        cell.classList.remove("incorrect");
+        cell.setAttribute("aria-invalid", "false");
         this.clearNotes(row, col);
         if (value !== EMPTY) {
             this.removePeerNotes(row, col, value);
@@ -404,7 +425,8 @@ function normalizeCell(input) {
     const match = input.value.match(/[1-9]/);
     input.value = match ? match[0] : "";
     syncValueClass(input);
-    input.classList.remove("hint", "invalid", "solved");
+    input.classList.remove("hint", "invalid", "incorrect", "solved");
+    input.setAttribute("aria-invalid", "false");
 }
 
 function syncValueClass(input) {
